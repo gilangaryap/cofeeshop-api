@@ -14,5 +14,9 @@ export interface IBasicResponse {
 }
 
 export interface IAuthResponse extends IBasicResponse {
-    data?: { token: string }[];
+    data?: Array<{
+        token: string;
+        uuid: string;
+        id: string;
+    }>;
 }
