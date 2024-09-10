@@ -1,5 +1,4 @@
 import transporter from "../configs/email";
-import { Response } from 'express-serve-static-core';
 
 interface EmailMessage {
     from: string;
@@ -8,20 +7,20 @@ interface EmailMessage {
     html: string;
 }
 
-const createEmail = (email: string, token: string): EmailMessage => {
+const createEmail = (email: string): EmailMessage => {
     const emailObj: EmailMessage = {
         from: process.env.FROM_GMAIL || '',
         to: email,
         subject: "Activation Link", 
-        html: `<p>code kamu: ${token}</p>` 
+        html: `<p>code kamu telah terdaftar</p>` 
     };
     return emailObj;
 };
 
 
-const sendMail = (email: string, token: string): Promise<boolean> => {
+const sendMail = (email: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
-        transporter.sendMail(createEmail(email, token), (err, info) => {
+        transporter.sendMail(createEmail(email), (err, info) => {
             if (err) {
                 console.error(err);
                 reject(err);
