@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { singleCloudUploader } from "../middleware/upload";
 import { authorization } from "../middleware/authorization.middleware";
-import { FetchDetail, update } from "../handlers/profile.handlers";
+import { FetchDetail, update } from "../handlers/auth/profile.handlers";
 
 export const profileRouter = Router();
 

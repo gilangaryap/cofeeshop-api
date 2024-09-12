@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import db from "../configs/pg";
-import { IDataUser, IUserBody, IUsersQuery } from "../models/user.model";
+import db from "../../configs/pg";
+import { IDataUser, IUserBody, IUsersQuery } from "../../models/user.model";
 
 export const createData = (hashedPassword: string,email: string,dbPool: Pool | PoolClient): Promise<QueryResult<IDataUser>> => {
   const query = `

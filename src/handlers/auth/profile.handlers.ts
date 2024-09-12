@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { cloudinaryUploader } from "../helpers/cloudinary";
-import {  findDataById, getDetailData, updateData,  } from "../repository/profile.repository";
+import { cloudinaryUploader } from "../../helpers/cloudinary";
+import { updateData } from "../../repository/auth/user.repository";
+import { getDetailData } from "../../repository/auth/profile.repository";
 
 export const update = async (req: Request, res: Response) => {
   const { id } = req.params;

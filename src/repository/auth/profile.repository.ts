@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import db from "../configs/pg";
-import { IDataProfile, IProfileBody } from "../models/profile.model";
+import db from "../../configs/pg";
+import { IDataProfile, IProfileBody } from "../../models/profile.model";
 
 export const createDataProflie = async (id: string, body: IProfileBody,dbPool: Pool | PoolClient): Promise<QueryResult<IDataProfile>> => {
   const query = `INSERT INTO profile (user_id, full_name, phone_number, address)

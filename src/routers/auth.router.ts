@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { FetchAll, login, register, update } from "../handlers/auth.handlers";
+import { FetchAll, login, register, update } from "../handlers/auth/auth.handlers";
 import { authorization } from "../middleware/authorization.middleware";
 
 export const authRouter = Router();

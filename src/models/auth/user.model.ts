@@ -1,4 +1,4 @@
-import { IBasicResponse } from "./response";
+import { IBasicResponse } from "../response";
 
 export interface IUsersParams {
   uuid: string;

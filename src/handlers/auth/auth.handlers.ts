@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
-import { GetByEmail } from "../repository/auth.repository";
-import { IUserLoginBody } from "../models/auth.model";
+import { IUserLoginBody } from "../../models/auth/auth.model";
 import bcrypt from "bcrypt";
-import { IPayload } from "../models/payload";
+import { IPayload } from "../../models/payload";
 import jwt from "jsonwebtoken";
-import { jwtOptions } from "../middleware/authorization.middleware";
-import { IUserRegisterBody, IUserResponse, IUsersParams, IUsersQuery } from "../models/user.model";
-import db from "../configs/pg";
-import { createData, getAllData, getTotalData, updateData } from '../repository/user.repository';
-import sendMail from "../helpers/nodemailer";
-import getLink from "../helpers/getLink";
-import { IAuthResponse } from "../models/response";
+import { jwtOptions } from "../../middleware/authorization.middleware";
+import db from "../../configs/pg";
+import sendMail from "../../helpers/nodemailer";
+import getLink from "../../helpers/getLink";
+import { IAuthResponse } from "../../models/response";
 import { ParsedQs } from 'qs'; 
-import { createDataProflie } from "../repository/profile.repository";
-import { IProfileBody } from "../models/profile.model";
+import { IProfileBody } from "../../models/profile.model";
+import { IUserRegisterBody, IUserResponse, IUsersQuery } from "../../models/auth/user.model";
+import { createData, getAllData, getTotalData, updateData } from "../../repository/auth/user.repository";
+import { createDataProflie } from "../../repository/auth/profile.repository";
+import { GetByEmail } from "../../repository/auth/auth.repository";
 
 export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Response) => {
   const client = await db.connect();
