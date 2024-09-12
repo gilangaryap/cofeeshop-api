@@ -5,96 +5,68 @@ import bcrypt from "bcrypt";
 import { IPayload } from "../models/payload";
 import jwt from "jsonwebtoken";
 import { jwtOptions } from "../middleware/authorization.middleware";
-import { IUserRegisterBody, IUserResponse, IUsersQuery } from "../models/user.model";
+import { IUserRegisterBody, IUserResponse, IUsersParams, IUsersQuery } from "../models/user.model";
 import db from "../configs/pg";
-import { createData, getAllData, getTotalData } from "../repository/user.repository";
+import { createData, getAllData, getTotalData, updateData } from '../repository/user.repository';
 import sendMail from "../helpers/nodemailer";
 import getLink from "../helpers/getLink";
 import { IAuthResponse } from "../models/response";
 import { ParsedQs } from 'qs'; 
+import { createDataProflie } from "../repository/profile.repository";
+import { IProfileBody } from "../models/profile.model";
 
-export const register = async (req: Request<{}, {}, IUserRegisterBody>,res: Response) => {
-  try{
+export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Response) => {
+  const client = await db.connect();
+  try {
+
+    await client.query('BEGIN');
     const { user_pass, user_email } = req.body;
 
     const salt = await bcrypt.genSalt();
     const hashed = await bcrypt.hash(user_pass, salt);
 
-    const result = await createData( hashed, user_email);
+    const createUserResult = await createData(hashed, user_email, client);
+    const userId = createUserResult.rows[0].id;
+
+    if (!userId) {
+      throw new Error('User ID not found in result');
+    }
+
+    const defaultProfile: IProfileBody = {
+      full_name: 'full name',
+      phone_number: 'phone number',
+      address: 'address',
+    };
+    await createDataProflie(userId, defaultProfile, client);
+
+    await client.query('COMMIT'); // Pastikan commit jika semua berhasil
+
     return res.status(201).json({
-      msg: "Register success",
-      data: result.rows,
+      msg: 'Register success',
+      data: createUserResult.rows[0],
     });
-  }catch(error){
-    if (error instanceof Error) {
-      if (/(invalid(.)+id(.)+)/g.test(error.message)) {
+  } catch (err) {
+    await client.query('ROLLBACK');
+    
+    if (err instanceof Error) {
+      if (/(invalid(.)+id(.)+)/g.test(err.message)) {
         return res.status(401).json({
-          msg: "Error",
-          err: "user tidak ditemukan",
+          msg: 'Error',
+          err: 'User tidak ditemukan',
         });
       }
       return res.status(401).json({
-        msg: "Error",
-        err: error.message,
+        msg: 'Error',
+        err: err.message,
       });
     }
     return res.status(500).json({
-      msg: "Error",
-      err: "Internal Server Error",
+      msg: 'Error',
+      err: 'Internal Server Error',
     });
+  } finally {
+    client.release();
   }
-  /* try {
-    const client = await db.connect();
-
-    try {
-      await client.query("BEGIN");
-
-      const { user_pass, user_email } = req.body;
-
-      const salt = await bcrypt.genSalt();
-      const hashed = await bcrypt.hash(user_pass, salt);
-
-      const newUser = await createData( hashed, user_email);
-
-      if (!newUser.rows.length) {
-        await client.query("ROLLBACK");
-        return res.status(404).json({
-          msg: "Error",
-          err: "Failed to register user",
-        });
-      }
-
-      const userUuid = newUser.rows[0].uuid;
-      if (!userUuid) throw new Error("User code not found");
-
-      const result = await sendMail(user_email);
-
-      if (!result) {
-        await client.query("ROLLBACK");
-        return res.status(404).json({
-          msg: "Error",
-          err: "Failed to send email",
-        });
-      }
-
-      await client.query("COMMIT");
-      return res.status(201).json({
-        msg: "Register Berhasil",
-        data: result,
-      });
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      msg: "Error",
-      err: "Internal Server Error",
-    });
-  } */
 };
 
 export const login = async (req: Request<{}, {}, IUserLoginBody>,res: Response<IAuthResponse>) => {
@@ -157,7 +129,6 @@ export const FetchAll = async (req: Request<{}, {}, {},IUsersQuery >,res: Respon
     const totalData = parseInt(dataUser.rows[0].total_user);
     // Menghitung total halaman berdasarkan total data dan batasan (limit) data per halaman
     const totalPage = Math.ceil(totalData / parseInt(query.limit || "2", 10));
-    console.log(req.baseUrl);
     // Membentuk objek respons dengan pesan sukses, data produk, dan meta-informasi
     const response = {
       msg: "success",
@@ -180,6 +151,43 @@ export const FetchAll = async (req: Request<{}, {}, {},IUsersQuery >,res: Respon
     return res.status(500).json({
       msg: "Error",
       err: "Internal Server Error",
+    });
+  }
+};
+
+export const update = async (req: Request,res: Response<IUserResponse>) => {
+  const { id } = req.params;
+  const { user_pass } = req.body;
+
+  try {
+    
+    let hashedPassword: string | undefined;
+    if (user_pass) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(user_pass, salt);
+    }
+
+    const result = await updateData(id, req.body, hashedPassword);
+    return res.status(200).json({
+      msg: "User telah di upgrade",
+      data: result.rows,
+    });
+  } catch (err: unknown) {
+    let errorMessage = "Internal Server Error";
+    if (err instanceof Error) {
+      errorMessage = err.message;
+      if (errorMessage.includes('syntax error at or near "WHERE"')) {
+        errorMessage =
+          "Kesalahan dalam penulisan email_user";
+        return res.status(400).json({
+          msg: "Error",
+          err: errorMessage,
+        });
+      }
+    }
+    return res.status(500).json({
+      msg: "Error",
+      err: errorMessage,
     });
   }
 };
