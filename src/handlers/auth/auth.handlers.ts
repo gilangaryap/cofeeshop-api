@@ -17,10 +17,26 @@ import { GetByEmail } from "../../repository/auth/auth.repository";
 
 export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Response) => {
   const client = await db.connect();
+
   try {
 
     await client.query('BEGIN');
     const { user_pass, user_email } = req.body;
+
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    if (!emailRegex.test(user_email)) {
+      return res.status(400).json({
+        msg: 'Registration failed',
+        err: 'Email must end with @gmail.com.',
+      });
+    }
+
+    if (user_pass.length < 6) {
+      return res.status(400).json({
+        msg: 'Registration failed',
+        err: 'Password must be at least 6 characters long.',
+      });
+    }
 
     const salt = await bcrypt.genSalt();
     const hashed = await bcrypt.hash(user_pass, salt);
@@ -39,7 +55,7 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
     };
     await createDataProflie(userId, defaultProfile, client);
 
-    await client.query('COMMIT'); // Pastikan commit jika semua berhasil
+    await client.query('COMMIT'); 
 
     return res.status(201).json({
       msg: 'Register success',
@@ -49,17 +65,26 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
     await client.query('ROLLBACK');
     
     if (err instanceof Error) {
+      if (err.message.includes('duplicate key value violates unique constraint "users_user_email_key"')) {
+        return res.status(409).json({ 
+          msg: 'Registration failed',
+          err: 'Email already registered. Please login or use a different email.',
+        });
+      }
+
       if (/(invalid(.)+id(.)+)/g.test(err.message)) {
         return res.status(401).json({
           msg: 'Error',
-          err: 'User tidak ditemukan',
+          err: 'User not found',
         });
       }
-      return res.status(401).json({
+
+      return res.status(400).json({ 
         msg: 'Error',
         err: err.message,
       });
     }
+
     return res.status(500).json({
       msg: 'Error',
       err: 'Internal Server Error',
@@ -87,7 +112,7 @@ export const login = async (req: Request<{}, {}, IUserLoginBody>,res: Response<I
         jwtOptions
       );
       return res.status(200).json({
-        msg: `Selamat datang, ${user_email}!`,
+        msg: `Welcome, ${user_email}!`,
         data: [
           {
             token,
@@ -157,10 +182,24 @@ export const FetchAll = async (req: Request<{}, {}, {},IUsersQuery >,res: Respon
 
 export const update = async (req: Request,res: Response<IUserResponse>) => {
   const { id } = req.params;
-  const { user_pass } = req.body;
+  const { user_pass , user_email } = req.body;
 
   try {
     
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    if (!emailRegex.test(user_email)) {
+      return res.status(400).json({
+        msg: 'update failed',
+        err: 'Email must end with @gmail.com.',
+      });
+    }
+
+    if (user_pass.length < 6) {
+      return res.status(400).json({
+        msg: 'Registration failed',
+        err: 'Password must be at least 6 characters long.',
+      });
+    }
     let hashedPassword: string | undefined;
     if (user_pass) {
       const salt = await bcrypt.genSalt(10);

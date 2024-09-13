@@ -12,7 +12,7 @@ export const createData = (hashedPassword: string,email: string,dbPool: Pool | P
 };
 
 export const getAllData = (queryParams: IUsersQuery): Promise<QueryResult<IDataUser>> => {
-  let query = ` select user_email from users order by created_at asc`;
+  let query = ` select id , user_email from users order by created_at asc`;
   let value = [];
   const { page, limit } = queryParams;
 
