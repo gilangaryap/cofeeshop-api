@@ -41,7 +41,6 @@ export const updateData = (id: string,body: IUserBody,hashedPassword?: string): 
     query += `user_email = $${values.length + 1}, `;
     values.push(user_email);
   }
-  console.log("ini dari body:",user_email)
 
   if (hashedPassword) {
     query += `user_pass = $${values.length + 1}, `;
