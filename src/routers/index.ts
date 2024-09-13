@@ -7,6 +7,7 @@ import { status_transactionsRouter } from "./status_transactions.handler";
 import { transactionsRouter } from "./transactions.router";
 import { categoryRouter } from "./category.router";
 import { productRouter } from "./product.router";
+import { promoRouter } from "./promo.router";
 
 
 const mainRouter = Router();
@@ -19,5 +20,6 @@ const mainRouter = Router();
     mainRouter.use("/transsctions", transactionsRouter);
     mainRouter.use("/category", categoryRouter);
     mainRouter.use("/product", productRouter);
+    mainRouter.use("/promo", promoRouter);
     
 export default mainRouter;
