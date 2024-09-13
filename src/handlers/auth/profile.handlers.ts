@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { cloudinaryUploader } from "../../helpers/cloudinary";
-import { updateData } from "../../repository/auth/user.repository";
-import { getDetailData } from "../../repository/auth/profile.repository";
+import { getDetailData, updateData } from "../../repository/auth/profile.repository";
 
 export const update = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -23,6 +22,7 @@ export const update = async (req: Request, res: Response) => {
       imageUrl = result.secure_url;
     }
 
+    console.log("body: ",req.body)
     const data = await updateData(id, req.body, imageUrl as string);
     return res.status(200).json({
       msg: "succes",
