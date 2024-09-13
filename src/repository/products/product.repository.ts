@@ -115,7 +115,95 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
   return db.query(query, value);
 };
 
+export const getDetailData = async (uuid: string): Promise<QueryResult<IDataproduct>> => {
+  let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.categorie_name , p.created_at,  p.updated_at
+    from products p 
+    inner join categories c on p.category_id = c.id 
+    LEFT JOIN promo p2 ON p.id = p2.product_id
+    where p.uuid = $1 `;
+  return db.query(query, [uuid]);
+};
+
+export const getImgData = async (dbPool: Pool | PoolClient,id: string): Promise<QueryResult<{ img_product: string }>> => {
+  let query = `SELECT
+  MAX(CASE WHEN rn = 1 THEN img_product ELSE NULL END) AS img_1,
+  MAX(CASE WHEN rn = 2 THEN img_product ELSE NULL END) AS img_2,
+  MAX(CASE WHEN rn = 3 THEN img_product ELSE NULL END) AS img_3,
+  MAX(CASE WHEN rn = 4 THEN img_product ELSE NULL END) AS img_4
+FROM (
+  SELECT
+    img_product,
+    ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY img_product) AS rn
+  FROM image_product
+  WHERE product_id = $1
+) `;
+  return dbPool.query(query, [id]);
+};
+
 export const getTotalData = (): Promise<QueryResult<{ total_product: string }>> => {
   let query = 'select count(*) as total_product from products';
   return db.query(query);
+};
+
+export const updateData = (id: string,body: IProductBody,imgUrl?: string): Promise<QueryResult<IDataproduct>> => {
+  let query = ` `;
+  let values = [];
+  let hasUpdates = false;
+
+  const {
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock,
+  } = body;
+
+  if (product_name && product_name.length > 0) {
+    query += `product_name = $${values.length + 1}, `;
+    values.push(product_name);
+    hasUpdates = true;
+  }
+
+  if (product_price && product_price > 0) {
+    query += `product_price = $${values.length + 1}, `;
+    values.push(product_price);
+    hasUpdates = true;
+  }
+
+  if (product_description && product_description.length > 0) {
+    query += `product_description = $${values.length + 1}, `;
+    values.push(product_description);
+    hasUpdates = true;
+  }
+
+  if (category_id && category_id > 0) {
+    query += `category_id = $${values.length + 1}, `;
+    values.push(category_id);
+    hasUpdates = true;
+  }
+
+  if (product_stock !== undefined) {
+    query += `product_stock = $${values.length + 1}, `;
+    values.push(product_stock);
+    hasUpdates = true;
+  }
+
+  if (hasUpdates) {
+    query = `UPDATE products SET ${query.slice(0, -2)}, updated_at = now() WHERE uuid = $${
+      values.length + 1
+    } RETURNING 
+        uuid , product_name , product_price , product_description , category_id , product_stock , updated_at  ;`;
+    values.push(id);
+  } else {
+    query = "";
+  }
+
+  if (imgUrl) {
+    query += ` UPDATE image_product SET img_product = $${
+      values.length + 1
+    } WHERE product_id = $${values.length + 2} RETURNING img_product `;
+    values.push(imgUrl ? `${imgUrl}` : null);
+  }
+
+  return db.query(query, values);
 };

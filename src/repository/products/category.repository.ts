@@ -12,7 +12,7 @@ export const createData = (body: ICategoriesBody ): Promise<QueryResult<IDataCat
 }
 
 export const getAllData = (): Promise<QueryResult<IDataCategories>> => {
-    const query = `select categorie_name from categories`
+    const query = `select id , categorie_name from categories`
     return db.query(query)
 }
 
