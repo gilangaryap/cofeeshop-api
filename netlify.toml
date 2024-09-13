@@ -1,0 +1,13 @@
+[build]
+  base = "."
+  publish = "dist"
+  functions = "netlify/functions"
+  command = "npm run build && npm run start"
+
+[build.environment]
+  NODE_VERSION = "18" 
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
