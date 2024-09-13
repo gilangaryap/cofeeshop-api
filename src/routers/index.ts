@@ -4,6 +4,7 @@ import { profileRouter } from "./profile.router";
 import { shippingRouter } from "./shipping.router";
 import { paymentRouter } from "./payment.router";
 import { status_transactionsRouter } from "./status_transactions.handler";
+import { transactionsRouter } from "./transactions.router";
 
 
 const mainRouter = Router();
@@ -13,5 +14,6 @@ const mainRouter = Router();
     mainRouter.use("/shipping", shippingRouter);
     mainRouter.use("/payment", paymentRouter);
     mainRouter.use("/status", status_transactionsRouter);
+    mainRouter.use("/transsctions", transactionsRouter);
     
 export default mainRouter;
