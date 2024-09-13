@@ -47,8 +47,6 @@ export const updateData = (id: string,body: IUserBody,hashedPassword?: string): 
     query += `user_pass = $${values.length + 1}, `;
     values.push(hashedPassword);
   }
-
-  console.log("ini pass:", hashedPassword);
   
   query = `UPDATE users SET ${query.slice(0, -2)}, updated_at = now() WHERE id = $${values.length + 1} RETURNING user_email, updated_at;`;
   values.push(id);

@@ -38,7 +38,7 @@ export const updateData = (id: string,body: IProfileBody,imgUrl?:string): Promis
       values.push(imgUrl);
     }
     
-    query = `UPDATE profile SET ${query.slice(0, -2)} WHERE user_id = $${
+    query = `UPDATE profile SET ${query.slice(0, -2)},  updated_at = now() WHERE user_id = $${
       values.length + 1
       } RETURNING full_name , phone_number , address , profile_image `;
       values.push(id);
