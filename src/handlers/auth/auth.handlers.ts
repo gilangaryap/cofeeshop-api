@@ -19,10 +19,11 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
   const client = await db.connect();
 
   try {
-
     await client.query('BEGIN');
+    
     const { user_pass, user_email } = req.body;
 
+    // Validate email
     const emailRegex = /^[^\s@]+@gmail\.com$/;
     if (!emailRegex.test(user_email)) {
       return res.status(400).json({
@@ -31,6 +32,7 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
       });
     }
 
+    // Validate password
     if (user_pass.length < 6) {
       return res.status(400).json({
         msg: 'Registration failed',
@@ -38,24 +40,39 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
       });
     }
 
+    // Hash password
     const salt = await bcrypt.genSalt();
-    const hashed = await bcrypt.hash(user_pass, salt);
+    const hashedPassword = await bcrypt.hash(user_pass, salt);
 
-    const createUserResult = await createData(hashed, user_email, client);
-    const userId = createUserResult.rows[0].id;
+    // Insert user into DB
+    const createUserResult = await createData(hashedPassword, user_email, client);
+    const userId = createUserResult.rows[0]?.id;
 
     if (!userId) {
       throw new Error('User ID not found in result');
     }
 
+    // Send confirmation email
+    const emailSent = await sendMail(user_email);
+    if (!emailSent) {
+      await client.query("ROLLBACK");
+      return res.status(500).json({
+        msg: "Error",
+        err: "Failed to send email",
+      });
+    }
+
+    // Default profile data
     const defaultProfile: IProfileBody = {
       full_name: 'full name',
       phone_number: 'phone number',
       address: 'address',
     };
+    
+    // Insert default profile into DB
     await createDataProflie(userId, defaultProfile, client);
 
-    await client.query('COMMIT'); 
+    await client.query('COMMIT');
 
     return res.status(201).json({
       msg: 'Register success',

@@ -11,8 +11,15 @@ const createEmail = (email: string): EmailMessage => {
     const emailObj: EmailMessage = {
         from: process.env.FROM_GMAIL || '',
         to: email,
-        subject: "Activation Link", 
-        html: `<p>code kamu telah terdaftar</p>` 
+        subject: "Selamat! Anda Telah Terdaftar di Coffee Shop Kami",
+        html: `
+            <p>Halo!</p>
+            <p>Selamat! Anda telah berhasil terdaftar di coffee shop kami. Terima kasih telah bergabung.</p>
+            <p>Nantikan promo menarik lainnya yang akan segera hadir untuk Anda.</p>
+            <p>Jika ada pertanyaan, jangan ragu untuk menghubungi kami.</p>
+            <p>Salam hangat,</p>
+            <p>Tim Coffee Shop</p>
+        `
     };
     return emailObj;
 };
