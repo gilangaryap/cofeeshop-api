@@ -67,6 +67,7 @@ export const register = async (req: Request<{}, {}, IUserRegisterBody>, res: Res
       full_name: 'full name',
       phone_number: 'phone number',
       address: 'address',
+      profile_image:"https://res.cloudinary.com/drppjxoxb/image/upload/v1727346163/coffeeshops/profileDefault.jpg"
     };
     
     // Insert default profile into DB

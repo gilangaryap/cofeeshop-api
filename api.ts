@@ -16,8 +16,8 @@ app.use(logger)
 
 const configs: CorsOptions = {
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ["GET,PUT,POST,DELETE,PATCH,OPTIONS","HEAD"],
+  allowedHeaders: ["Authorization", "x-headers", "content-type"],
   credentials: true, 
 };
 

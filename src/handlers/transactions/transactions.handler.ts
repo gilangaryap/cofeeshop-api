@@ -42,4 +42,4 @@ export const create = async (req: Request<{}, {}, ITransactionWithDetailsBody>,r
         err: "Internal Server Error",
       });
     }
-  };
+};
