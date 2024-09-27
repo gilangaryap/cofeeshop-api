@@ -1,5 +1,6 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import { IDataTransaction, ITransaction_product, ITransactionBody, ITransactionProduct } from "../../models/transactions/transactions.model";
+import { IDataTransaction, ITransaction_product, ITransactionBody, ITransactionProduct, ITransactionQuery } from "../../models/transactions/transactions.model";
+import db from "../../configs/pg";
 
 export const createData = (body: ITransactionBody,dbPool: Pool | PoolClient): Promise<QueryResult<IDataTransaction>> => {
     const query = `insert into transactions ( user_id , payments_id ,shipping_id , status_id , subtotal , tax , total_discount , grand_total )
@@ -20,5 +21,76 @@ export const createDataProduct = (transaction_id: string,product: ITransaction_p
     console.log(query, values);
   
     return dbPool.query(query, values);
+};
+
+export const getAllData = (queryParams: ITransactionQuery,id:string) => {
+  let query = `
+    SELECT
+        (SELECT img_product 
+         FROM image_product 
+         WHERE product_id = p.id 
+         LIMIT 1) AS img_product,
+        t.order_number,
+        TO_CHAR(t.created_at, 'DD Mon YYYY') AS created_date,
+        p.product_price,
+        st.status 
+    FROM 
+        transaction_product tp
+        INNER JOIN products p ON tp.product_id = p.id
+        INNER JOIN transactions t ON tp.transaction_id = t.id
+        INNER JOIN status_transactions st ON t.status_id = st.id 
+        INNER JOIN users u ON t.user_id = u.id
+  `;
+
+  const values: any[] = [];
+  const { status, page, limit} = queryParams;
+  const conditions: string[] = [];
+
+  if (status) {
+    let statusFilter = "";
+    switch (status.toLowerCase()) {
+      case "1":
+        statusFilter = `st.status = 'On Progress'`;
+        break;
+      case "2":
+        statusFilter = `st.status = 'Sending Goods'`;
+        break;
+      case "3":
+        statusFilter = `st.status = 'Finish Order'`;
+        break;
+      default:
+        throw new Error("Invalid status");
+    }
+    conditions.push(statusFilter);
+  }
+
+  if (id) {
+    values.push(id); 
+    conditions.push(`u.id = $${values.length}`); 
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`;
+  }
+
+  if (page && limit) {
+    const pageLimit = parseInt(limit);
+    const offset = (parseInt(page) - 1) * pageLimit;
+
+    values.push(pageLimit, offset);
+    query += ` LIMIT $${values.length - 1} OFFSET $${values.length}`;
+  }
+
+  console.log(query)
+  return db.query(query, values);
+};
+
+
+export const getTotalTransaction = ( uuid: string): Promise<QueryResult<{ total_product: string }>> => {
+  let query = `select count(*) as total_product from transaction_product tp
+    INNER JOIN transactions t ON tp.transaction_id = t.id
+    INNER JOIN users u ON t.user_id = u.id 
+    WHERE u.id = $1;`;
+  return db.query(query, [uuid]);
 };
   

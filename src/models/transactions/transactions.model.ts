@@ -21,6 +21,7 @@ export interface ITransactionQuery {
   page: string;
   limit: string;
   [key: string]: any;
+  status: string;
 }
 
 export interface ITransactionResponse extends IBasicResponse {

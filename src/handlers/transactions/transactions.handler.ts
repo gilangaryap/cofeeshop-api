@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { ITransactionResponse, ITransactionWithDetailsBody } from "../../models/transactions/transactions.model";
+import { ITransactionQuery, ITransactionResponse, ITransactionWithDetailsBody } from "../../models/transactions/transactions.model";
 import db from "../../configs/pg";
-import { createData, createDataProduct } from "../../repository/transactions/transactions.repository";
+import { createData, createDataProduct, getAllData, getTotalTransaction } from "../../repository/transactions/transactions.repository";
+import getLink from "../../helpers/getLink";
 
 export const create = async (req: Request<{}, {}, ITransactionWithDetailsBody>,res: Response<ITransactionResponse>) => {
     try {
@@ -42,4 +43,48 @@ export const create = async (req: Request<{}, {}, ITransactionWithDetailsBody>,r
         err: "Internal Server Error",
       });
     }
+};
+
+export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransactionQuery>,res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    const result = await getAllData(req.query,id);
+
+    const dataTransaction = await getTotalTransaction(id);
+
+    if (dataTransaction.rows.length === 0) {
+      return res.status(404).json({
+        msg: "Error",
+        err: "Transaction Data Not Found",
+      });
+    }
+
+    const totalData = parseInt(dataTransaction.rows[0].total_product);
+
+    const page = parseInt((req.query.page as string) || "1");
+    const limit = parseInt(req.query.limit as string || "4");
+
+    const totalPage = Math.ceil(totalData / limit);
+
+    return res.status(200).json({
+      msg: "success",
+      data: result.rows,
+      pagination: {
+        totalData,
+        totalPage,
+        page,
+        prevLink: page > 1 ? getLink(req, "previous") : null,
+        nextLink: page != totalPage ? getLink(req, "next") : null,
+      },
+    });
+  } catch (err) {
+    // Menangani kesalahan internal server
+    console.error("Internal Server Error:", err);
+    return res.status(500).json({
+      msg: "Error",
+      err: "Internal Server Error",
+    });
+  }
 };

@@ -18,7 +18,7 @@ const mainRouter = Router();
     mainRouter.use("/shipping", shippingRouter);
     mainRouter.use("/payment", paymentRouter);
     mainRouter.use("/status", status_transactionsRouter);
-    mainRouter.use("/transsctions", transactionsRouter);
+    mainRouter.use("/transsction", transactionsRouter);
     mainRouter.use("/category", categoryRouter);
     mainRouter.use("/product", productRouter);
     mainRouter.use("/promo", promoRouter);
