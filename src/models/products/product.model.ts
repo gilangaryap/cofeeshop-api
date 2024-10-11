@@ -10,7 +10,7 @@ export interface IProductBody {
     img_product?:string;
 }
 
-export interface IDataproduct extends IProductBody {
+export interface IDataProduct extends IProductBody {
     id?: string;
     created_at?: string;
     updated_at?: string;
@@ -38,9 +38,9 @@ export interface IProductTotalQuery{
 }
 
 export interface IProductResponse extends IBasicResponse {
-    data?: IDataproduct[];
+    data?: IDataProduct[];
 }
 
 export interface IProductWithImageProductResponse extends IBasicResponse {
-    data?: [ IDataproduct[] , IDataproduct[] ]
+    data?: [ IDataProduct[] , IDataProduct[] ]
 }

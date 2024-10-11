@@ -1,14 +1,12 @@
 import { Pool, PoolClient, QueryResult } from "pg";
 import {
-  IDataproduct,
+  IDataProduct,
   IProductBody,
   IProductQuery,
 } from "../../models/products/product.model";
 import db from "../../configs/pg";
 
-export const createData = (
-  body: IProductBody
-): Promise<QueryResult<IDataproduct>> => {
+export const createData = ( body: IProductBody): Promise<QueryResult<IDataProduct>> => {
   const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
     values ($1, $2, $3, $4, $5)
     returning product_name , product_price , product_description , category_id , product_stock , created_at `;
@@ -41,7 +39,7 @@ export const createDataImage = (
   dbPool: Pool | PoolClient,
   id: string,
   imgUrl?: string
-): Promise<QueryResult<IDataproduct>> => {
+): Promise<QueryResult<IDataProduct>> => {
   let query = `insert into image_product ( img_product , product_id)
       values `;
   const values: (string | null)[] = [];
@@ -54,7 +52,7 @@ export const createDataImage = (
 
 export const getAllData = async (
   queryParams: IProductQuery
-): Promise<QueryResult<IDataproduct>> => {
+): Promise<QueryResult<IDataProduct>> => {
   let query = ` 
       select products.uuid, products.product_name, products.product_price, products.product_description, p2.discount_price, c.categorie_name,
          (SELECT img_product FROM image_product WHERE product_id = products.id LIMIT 1) AS img_product
@@ -152,7 +150,7 @@ export const getAllData = async (
   return db.query(query, value);
 };
 
-export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataproduct>> => {
+export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataProduct>> => {
   let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.categorie_name , p.created_at,  p.updated_at
         from products p 
         inner join categories c on p.category_id = c.id 
@@ -162,7 +160,7 @@ export const getDetailData = async ( uuid: string): Promise<QueryResult<IDatapro
 };
 export const getDetailProductImg = async (
   uuid: string
-): Promise<QueryResult<IDataproduct>> => {
+): Promise<QueryResult<IDataProduct>> => {
   let query = `SELECT  p.uuid, (SELECT img_product FROM image_product WHERE product_id = p.id LIMIT 1) AS img_product, p.product_name, p.product_price, p2.discount_price
   FROM 
     products p
@@ -204,7 +202,7 @@ export const updateData = (
   id: string,
   body: IProductBody,
   imgUrl?: string
-): Promise<QueryResult<IDataproduct>> => {
+): Promise<QueryResult<IDataProduct>> => {
   let query = ` `;
   let values = [];
   let hasUpdates = false;
