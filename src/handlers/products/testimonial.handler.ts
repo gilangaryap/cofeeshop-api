@@ -31,16 +31,11 @@ export const create = async (req: Request, res: Response) => {
 export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>,res: Response<ITestimonialResponse>) => {
   try {
     const result = await getAllData(req.query);
-    // Mendapatkan total produk
     const dataUser = await getTotalTestimonialData();
-    // Mendapatkan nomor halaman saat ini
     const page = parseInt((req.query.page as string) || "1");
-    // Mendapatkan total data produk dari hasil penghitungan
     const totalData = parseInt(dataUser.rows[0].total_user);
-    // Menghitung total halaman berdasarkan total data dan batasan (limit) data per halaman
     const totalPage = Math.ceil(totalData / parseInt(req.query.limit || "2"));
     console.log(req.baseUrl);
-    // Membentuk objek respons dengan pesan sukses, data produk, dan meta-informasi
     const response = {
       msg: "success",
       data: result.rows,
@@ -52,8 +47,6 @@ export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>,res: Respon
         nextLink: page != totalPage ? getLink(req, "next") : null,
       },
     };
-
-    // Mengirimkan respons JSON dengan status 200 OK ke klien
     return res.status(200).json(response);
   } catch (err: unknown) {
     if (err instanceof Error) {

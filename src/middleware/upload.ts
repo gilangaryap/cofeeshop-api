@@ -45,66 +45,101 @@ export const singleCloudUploader = (fieldName: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     singleCloud(req, res, (err: unknown) => {
       if (err instanceof multer.MulterError) {
-          switch (err.code) {
-              case "LIMIT_PART_COUNT":
-                  return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
-              case "LIMIT_FILE_SIZE":
-                  return res.status(400).send({ message: "The uploaded file size exceeds the limit." });
-              case "LIMIT_FILE_COUNT":
-                  return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
-              case "LIMIT_FIELD_KEY":
-                  return res.status(400).send({ message: "The uploaded field key is invalid." });
-              case "LIMIT_FIELD_VALUE":
-                  return res.status(400).send({ message: "The uploaded field value is invalid." });
-              case "LIMIT_FIELD_COUNT":
-                  return res.status(400).send({ message: "The number of uploaded fields exceeds the limit." });
-              case "LIMIT_UNEXPECTED_FILE":
-                  return res.status(400).send({ message: "The uploaded file format is invalid." });
-              default:
-                  return res.status(500).send({ message: "An error occurred while uploading the file." });
-          }
+        switch (err.code) {
+          case "LIMIT_PART_COUNT":
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded files exceeds the limit.",
+              });
+          case "LIMIT_FILE_SIZE":
+            return res
+              .status(400)
+              .send({ message: "The uploaded file size exceeds the limit." });
+          case "LIMIT_FILE_COUNT":
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded files exceeds the limit.",
+              });
+          case "LIMIT_FIELD_KEY":
+            return res
+              .status(400)
+              .send({ message: "The uploaded field key is invalid." });
+          case "LIMIT_FIELD_VALUE":
+            return res
+              .status(400)
+              .send({ message: "The uploaded field value is invalid." });
+          case "LIMIT_FIELD_COUNT":
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded fields exceeds the limit.",
+              });
+          case "LIMIT_UNEXPECTED_FILE":
+            return res
+              .status(400)
+              .send({ message: "The uploaded file format is invalid." });
+          default:
+            return res
+              .status(500)
+              .send({ message: "An error occurred while uploading the file." });
+        }
       } else if (err) {
         const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
         if (!req.file || !allowedMimeTypes.includes(req.file.mimetype)) {
-            return res.status(400).send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+          return res
+            .status(400)
+            .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
         }
         return res.status(500).json({ error: "Internal server error" });
-    }
+      }
       next();
     });
   };
 };
 
-export const multiCloudUploader = (fieldName: string, maxCount: number): RequestHandler => {
+export const multiCloudUploader = (  fieldName: string,  maxCount: number): RequestHandler => {
   const multiCloud = cloudUploader.array(fieldName, maxCount);
   return (req: Request, res: Response, next: NextFunction) => {
-    multiCloud(req, res, (err: unknown) => {
+    multiCloud(req, res, (err: unknown) =>  {
+      // Check if error is a multer error
       if (err instanceof multer.MulterError) {
         switch (err.code) {
           case "LIMIT_PART_COUNT":
-            return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
+            return res.status(400).send({
+              message: "The number of uploaded files exceeds the limit.",
+            });
           case "LIMIT_FILE_SIZE":
             return res.status(400).send({ message: "The uploaded file size exceeds the limit." });
           case "LIMIT_FILE_COUNT":
-            return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
+            return res.status(400).send({
+              message: "The number of uploaded files exceeds the limit.",
+            });
           case "LIMIT_FIELD_KEY":
             return res.status(400).send({ message: "The uploaded field key is invalid." });
           case "LIMIT_FIELD_VALUE":
             return res.status(400).send({ message: "The uploaded field value is invalid." });
           case "LIMIT_FIELD_COUNT":
-            return res.status(400).send({ message: "The number of uploaded fields exceeds the limit." });
+            return res.status(400).send({
+              message: "The number of uploaded fields exceeds the limit.",
+            });
           case "LIMIT_UNEXPECTED_FILE":
             return res.status(400).send({ message: "The uploaded file format is invalid." });
           default:
             return res.status(500).send({ message: "An error occurred while uploading the file." });
         }
       } else if (err) {
-        if (!req.file || !["image/jpeg", "image/png", "image/jpg"].includes(req.file.mimetype)) {
-          return res.status(400).send({ message: "Only JPG, PNG, or JPEG files are allowed." });
-        }
+        // Handle other errors
         return res.status(500).json({ error: "Internal server error" });
       }
-      next();
+      const files = req.files as Express.Multer.File[];
+      const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
+      if (!files || !files.every(file => allowedMimeTypes.includes(file.mimetype))) {
+        return res.status(400).send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+      }
+
+      next(); // Proceed to the next middleware
     });
   };
 };
@@ -116,25 +151,53 @@ export const multiFieldCloudUploader = (fieldName: Field[]) => {
       if (err instanceof multer.MulterError) {
         switch (err.code) {
           case "LIMIT_PART_COUNT":
-            return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded files exceeds the limit.",
+              });
           case "LIMIT_FILE_SIZE":
-            return res.status(400).send({ message: "The uploaded file size exceeds the limit." });
+            return res
+              .status(400)
+              .send({ message: "The uploaded file size exceeds the limit." });
           case "LIMIT_FILE_COUNT":
-            return res.status(400).send({ message: "The number of uploaded files exceeds the limit." });
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded files exceeds the limit.",
+              });
           case "LIMIT_FIELD_KEY":
-            return res.status(400).send({ message: "The uploaded field key is invalid." });
+            return res
+              .status(400)
+              .send({ message: "The uploaded field key is invalid." });
           case "LIMIT_FIELD_VALUE":
-            return res.status(400).send({ message: "The uploaded field value is invalid." });
+            return res
+              .status(400)
+              .send({ message: "The uploaded field value is invalid." });
           case "LIMIT_FIELD_COUNT":
-            return res.status(400).send({ message: "The number of uploaded fields exceeds the limit." });
+            return res
+              .status(400)
+              .send({
+                message: "The number of uploaded fields exceeds the limit.",
+              });
           case "LIMIT_UNEXPECTED_FILE":
-            return res.status(400).send({ message: "The uploaded file format is invalid." });
+            return res
+              .status(400)
+              .send({ message: "The uploaded file format is invalid." });
           default:
-            return res.status(500).send({ message: "An error occurred while uploading the file." });
+            return res
+              .status(500)
+              .send({ message: "An error occurred while uploading the file." });
         }
       } else if (err) {
-        if (req.file?.mimetype !== "image/jpeg" && req.file?.mimetype !== "image/png" && req.file?.mimetype !== "image/jpg") {
-          return res.status(400).send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+        if (
+          req.file?.mimetype !== "image/jpeg" &&
+          req.file?.mimetype !== "image/png" &&
+          req.file?.mimetype !== "image/jpg"
+        ) {
+          return res
+            .status(400)
+            .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
         }
         return res.status(500).json({ error: "Internal server error" });
       } else {

@@ -6,7 +6,8 @@ export interface IProductBody {
     discount_price?: number;
     product_description?: string;
     category_id?: number;
-    product_stock?: number
+    product_stock?: number;
+    img_product?:string;
 }
 
 export interface IDataproduct extends IProductBody {

@@ -1,18 +1,19 @@
 import { Request, Response } from "express";
-import { IProductBody, IProductQuery, IProductResponse } from "../../models/products/product.model";
+import { IProductBody, IProductQuery, IProductResponse } from '../../models/products/product.model';
 import db from "../../configs/pg";
-import { createData, createDataImage, getAllData, getDetailData, getImgData, getTotalData, updateData } from "../../repository/products/product.repository";
+import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData } from "../../repository/products/product.repository";
 import { cloudinaryUploader } from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
 export const create = async (req: Request<{}, {}, IProductBody>, res: Response) => {
   const client = await db.connect();
   try {
+
     await client.query('BEGIN');
 
     const productResult = await createData(req.body);
     const product = productResult.rows[0];
-    
+
     if (!product || !product.product_name) {
       throw new Error('Failed to create product: product_name is undefined');
     }
@@ -27,6 +28,7 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
       throw new Error('Failed to create product');
     }
 
+    console.log("file: ",File)
     const { result, error } = await cloudinaryUploader(req, 'product', resultName);
     if (error) {
       throw new Error(error.message);
@@ -48,8 +50,15 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
       },
     });
 
-  }catch (err) {
+  } catch (err) {
     console.error("Error in createNewProduct:", err);
+
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackErr) {
+      console.error("Rollback error:", rollbackErr);
+    }
+
     if (err instanceof Error) {
       if (
         err.message.includes(
@@ -64,14 +73,17 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
       if (err.message.includes("File not found")) {
         return res.status(400).json({
           msg: "Error",
-          err: "product image cannot be null",
+          err: "Product image cannot be null",
         });
       }
     }
+
     return res.status(500).json({
       msg: "Error",
       err: "Internal Server Error",
     });
+  } finally {
+    client.release();
   }
 };
 
@@ -124,6 +136,26 @@ export const FetchAll = async (req: Request<{}, {}, {}, IProductQuery>,res: Resp
   }
 };
 
+export const FetchDetailImg = async (req: Request,res: Response) => {
+  const { uuid } = req.params;
+  try {
+    const result = await getDetailProductImg(uuid);
+    return res.status(201).json({
+      msg: "success",
+      data: result.rows,
+    })
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.log(err.message);
+    }
+    return res.status(500).json({
+      msg: "Error",
+      err: "Internal Server Error",
+    });
+  }
+};
+
+
 export const FetchDetail = async (req: Request, res: Response) => {
   const client = await db.connect();
 
@@ -144,7 +176,6 @@ export const FetchDetail = async (req: Request, res: Response) => {
 
       // Get product ID
       const productId = product.rows[0].id;
-      console.log(productId)
       if (!productId) {
         await client.query("ROLLBACK");
         throw new Error("Product ID does not exist");
@@ -154,11 +185,6 @@ export const FetchDetail = async (req: Request, res: Response) => {
       const imgProduct = await getImgData(client , productId);
 
       await client.query("COMMIT");
-
-      console.log({
-        product: product.rows[0],
-        imgProduct: imgProduct.rows[0],
-      });
 
       return res.status(200).json({
         msg: "Success",

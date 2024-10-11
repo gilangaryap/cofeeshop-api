@@ -26,6 +26,7 @@ export const createDataProduct = (transaction_id: string,product: ITransaction_p
 export const getAllData = (queryParams: ITransactionQuery,id:string) => {
   let query = `
     SELECT
+        tp.id,
         (SELECT img_product 
          FROM image_product 
          WHERE product_id = p.id 
@@ -81,10 +82,8 @@ export const getAllData = (queryParams: ITransactionQuery,id:string) => {
     query += ` LIMIT $${values.length - 1} OFFSET $${values.length}`;
   }
 
-  console.log(query)
   return db.query(query, values);
 };
-
 
 export const getTotalTransaction = ( uuid: string): Promise<QueryResult<{ total_product: string }>> => {
   let query = `select count(*) as total_product from transaction_product tp

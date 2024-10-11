@@ -1,29 +1,60 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import { IDataproduct, IProductBody, IProductQuery } from "../../models/products/product.model";
+import {
+  IDataproduct,
+  IProductBody,
+  IProductQuery,
+} from "../../models/products/product.model";
 import db from "../../configs/pg";
 
-export const createData = (body: IProductBody): Promise<QueryResult<IDataproduct>> => {
-    const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
-      values ($1, $2, $3, $4, $5)
-      returning product_name , product_price , product_description , category_id , product_stock , created_at `;
-    const { product_name , product_price , product_description , category_id , product_stock} = body;
-    const values = [ product_name , product_price , product_description , category_id , product_stock];
-    console.log("ini dari clg: ",product_name , product_price , product_description , category_id , product_stock)
-    return db.query(query, values);
-  };
-  
-export const createDataImage = (dbPool: Pool | PoolClient,id: string,imgUrl?: string): Promise<QueryResult<IDataproduct>> => {
-    let query = `insert into image_product ( img_product , product_id)
-      values `;
-    const values: (string | null)[] = [];
-    const imgUrlValue = imgUrl ? `${imgUrl}` : null;
-    query += ` ($${values.length + 1}, $${values.length + 2})`;
-    values.push(imgUrlValue, id);
-    query += ` returning * `;
-    return dbPool.query(query, values);
+export const createData = (
+  body: IProductBody
+): Promise<QueryResult<IDataproduct>> => {
+  const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
+    values ($1, $2, $3, $4, $5)
+    returning product_name , product_price , product_description , category_id , product_stock , created_at `;
+  const {
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock,
+  } = body;
+  const values = [
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock,
+  ];
+  console.log(
+    "ini dari clg: ",
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock
+  );
+  return db.query(query, values);
 };
 
-export const getAllData = async (queryParams: IProductQuery): Promise<QueryResult<IDataproduct>> => {
+export const createDataImage = (
+  dbPool: Pool | PoolClient,
+  id: string,
+  imgUrl?: string
+): Promise<QueryResult<IDataproduct>> => {
+  let query = `insert into image_product ( img_product , product_id)
+      values `;
+  const values: (string | null)[] = [];
+  const imgUrlValue = imgUrl ? `${imgUrl}` : null;
+  query += ` ($${values.length + 1}, $${values.length + 2})`;
+  values.push(imgUrlValue, id);
+  query += ` returning * `;
+  return dbPool.query(query, values);
+};
+
+export const getAllData = async (
+  queryParams: IProductQuery
+): Promise<QueryResult<IDataproduct>> => {
   let query = ` 
       select products.uuid, products.product_name, products.product_price, products.product_description, p2.discount_price, c.categorie_name,
          (SELECT img_product FROM image_product WHERE product_id = products.id LIMIT 1) AS img_product
@@ -35,20 +66,28 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
 
   let whereAdd = false;
 
-  const {category,maximumPrice,minimumPrice,searchText,promo,sortBy,page,limit,} = queryParams;
+  const {
+    category,
+    maximumPrice,
+    minimumPrice,
+    searchText,
+    promo,
+    sortBy,
+    page,
+    limit,
+  } = queryParams;
 
   if (promo) {
     query += ` inner join promo on products.id = promo.product_id `;
   }
 
-  if (minimumPrice && maximumPrice ) {
+  if (minimumPrice && maximumPrice) {
     if (maximumPrice > minimumPrice) {
       query += whereAdd ? ` where ` : ` where `;
       query += ` product_price between $${value?.length + 1} and $${
         value?.length + 2
-        
       }`;
-      
+
       value.push(minimumPrice);
       value.push(maximumPrice);
       whereAdd = true;
@@ -110,42 +149,62 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
     query += ` limit $${value.length + 1} offset $${value.length + 2}`;
     value.push(pageLimit, offset);
   }
-
-  console.log(query ,  value)
   return db.query(query, value);
 };
 
-export const getDetailData = async (uuid: string): Promise<QueryResult<IDataproduct>> => {
+export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataproduct>> => {
   let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.categorie_name , p.created_at,  p.updated_at
-    from products p 
-    inner join categories c on p.category_id = c.id 
-    LEFT JOIN promo p2 ON p.id = p2.product_id
-    where p.uuid = $1 `;
+        from products p 
+        inner join categories c on p.category_id = c.id 
+        LEFT JOIN promo p2 ON p.id = p2.product_id
+        where p.uuid = $1 `;
+  return db.query(query, [uuid]);
+};
+export const getDetailProductImg = async (
+  uuid: string
+): Promise<QueryResult<IDataproduct>> => {
+  let query = `SELECT  p.uuid, (SELECT img_product FROM image_product WHERE product_id = p.id LIMIT 1) AS img_product, p.product_name, p.product_price, p2.discount_price
+  FROM 
+    products p
+INNER JOIN 
+    categories c ON p.category_id = c.id
+LEFT JOIN 
+    promo p2 ON p.id = p2.product_id
+WHERE 
+    p.uuid = $1 `;
   return db.query(query, [uuid]);
 };
 
-export const getImgData = async (dbPool: Pool | PoolClient,id: string): Promise<QueryResult<{ img_product: string }>> => {
+export const getImgData = async (
+  dbPool: Pool | PoolClient,
+  id: string
+): Promise<QueryResult<{ img_product: string }>> => {
   let query = `SELECT
   MAX(CASE WHEN rn = 1 THEN img_product ELSE NULL END) AS img_1,
   MAX(CASE WHEN rn = 2 THEN img_product ELSE NULL END) AS img_2,
-  MAX(CASE WHEN rn = 3 THEN img_product ELSE NULL END) AS img_3,
-  MAX(CASE WHEN rn = 4 THEN img_product ELSE NULL END) AS img_4
+  MAX(CASE WHEN rn = 3 THEN img_product ELSE NULL END) AS img_3
 FROM (
   SELECT
     img_product,
     ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY img_product) AS rn
   FROM image_product
   WHERE product_id = $1
-) `;
+) AS subquery;`;
   return dbPool.query(query, [id]);
 };
 
-export const getTotalData = (): Promise<QueryResult<{ total_product: string }>> => {
-  let query = 'select count(*) as total_product from products';
+export const getTotalData = (): Promise<
+  QueryResult<{ total_product: string }>
+> => {
+  let query = "select count(*) as total_product from products";
   return db.query(query);
 };
 
-export const updateData = (id: string,body: IProductBody,imgUrl?: string): Promise<QueryResult<IDataproduct>> => {
+export const updateData = (
+  id: string,
+  body: IProductBody,
+  imgUrl?: string
+): Promise<QueryResult<IDataproduct>> => {
   let query = ` `;
   let values = [];
   let hasUpdates = false;
@@ -189,9 +248,10 @@ export const updateData = (id: string,body: IProductBody,imgUrl?: string): Promi
   }
 
   if (hasUpdates) {
-    query = `UPDATE products SET ${query.slice(0, -2)}, updated_at = now() WHERE uuid = $${
-      values.length + 1
-    } RETURNING 
+    query = `UPDATE products SET ${query.slice(
+      0,
+      -2
+    )}, updated_at = now() WHERE uuid = $${values.length + 1} RETURNING 
         uuid , product_name , product_price , product_description , category_id , product_stock , updated_at  ;`;
     values.push(id);
   } else {
