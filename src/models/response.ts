@@ -18,5 +18,6 @@ export interface IAuthResponse extends IBasicResponse {
         token: string;
         uuid: string;
         id: string;
+        role:string;
     }>;
 }

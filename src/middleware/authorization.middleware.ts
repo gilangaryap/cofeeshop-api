@@ -9,34 +9,32 @@ export const jwtOptions: SignOptions = {
   issuer: process.env.JWT_ISSUER,
 };
 
-export const authorization =(role?: string[]) =>(req: Request<AppParams>,res: Response<IAuthResponse>,next: NextFunction) => {
+export const authorization =
+  (roles: string) =>( req: Request<AppParams>, res: Response<IAuthResponse>, next: NextFunction) => {
     const bearerToken = req.header("Authorization");
     if (!bearerToken) {
       return res.status(403).json({
         msg: "Forbidden",
-        err: "tidak memiliki akses",
+        err: "no access",
       });
     }
-
     const token = bearerToken.split(" ")[1];
-    jwt.verify(token,<string>process.env.JWT_SECRET,jwtOptions,(err, payload) => {
-        // kalo tidak valid, ditolak
+    jwt.verify( token, <string>process.env.JWT_SECRET, jwtOptions, (err, payload) => {
         if (err) {
           return res.status(403).json({
             msg: err.message,
             err: err.name,
           });
         }
-        // pengecekan role
-        if (role) {
-          if (!role.includes((payload as IPayload).role as string)) {
+        const userPayload = payload as IPayload;
+        if (roles) {
+          if (!roles.includes(userPayload.iss)) {
             return res.status(403).json({
               msg: "Forbidden",
-              err: "Akses tidak diperbolehkan",
+              err: "Access denied, insufficient permissions",
             });
           }
         }
-        // kalo valid, lanjut
         req.userPayload = payload as IPayload;
         next();
       }

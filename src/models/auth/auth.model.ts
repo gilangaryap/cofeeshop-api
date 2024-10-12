@@ -3,6 +3,7 @@ export interface IAuth {
     user_pass: string;
     uuid: string;
     id: string;
+    role:string;
 }
 
 export interface IUserLoginBody {
