@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { IUserLoginBody } from "../../models/auth/auth.model";
 import bcrypt from "bcrypt";
-import { IPayload } from "../../models/payload";
+import { IPayload } from "../../models/auth/payload";
 import jwt from "jsonwebtoken";
 import { jwtOptions } from "../../middleware/authorization.middleware";
 import db from "../../configs/pg";

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express-serve-static-core";
 import jwt, { SignOptions } from "jsonwebtoken";
-import { IPayload } from "../models/payload";
+import { IPayload } from "../models/auth/payload";
 import { IAuthResponse } from "../models/response";
 import { AppParams } from "../models/params.model";
 
