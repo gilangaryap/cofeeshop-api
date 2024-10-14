@@ -8,18 +8,8 @@ import db from "../../configs/pg";
 import sendMail from "../../helpers/nodemailer";
 import getLink from "../../helpers/getLink";
 import { IProfileBody } from "../../models/profile.model";
-import {
-  IRegisterResponse,
-  IUserProfileResponse,
-  IUserRegisterBody,
-  IUserResponse,
-  IUsersQuery,
-} from "../../models/auth/user.model";
-import {
-  createData,
-  getAllData,
-  getTotalData,
-  updateData,
+import { IRegisterResponse, IUserProfileResponse, IUserRegisterBody, IUsersQuery,} from "../../models/auth/user.model";
+import { createData, getAllData, getTotalData, updateData,
 } from "../../repository/auth/user.repository";
 import { createDataProfile } from "../../repository/auth/profile.repository";
 import { GetByEmail } from "../../repository/auth/auth.repository";
@@ -254,6 +244,7 @@ export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Respo
     });
   }
 };
+
 
 export const update = async (req: Request, res: Response<IRegisterResponse>) => {
   const { id } = req.params;
