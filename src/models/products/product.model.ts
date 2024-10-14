@@ -22,7 +22,7 @@ export interface IProductModel {
     id: string,
 }
 
-export interface IProductQuery extends IProductTotalQuery{
+export interface IProductQuery extends IProductPaginationQuery{
     searchText: string ; 
     category: string;
     minimumPrice: number;
@@ -31,7 +31,7 @@ export interface IProductQuery extends IProductTotalQuery{
     promo?: boolean;
 }
 
-export interface IProductTotalQuery{
+export interface IProductPaginationQuery{
     page?: string;
     limit?: string
     [key: string]: any;

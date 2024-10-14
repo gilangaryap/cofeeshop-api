@@ -4,4 +4,4 @@ import { IProductQuery } from './products/product.model';
 
 
 export type AppParams = ParamsDictionary | IUsersParams ; 
-export type QueryParams = IUsersQuery | IProductQuery ;
+export type QueryParams = IUsersQuery | IProductQuery  ;

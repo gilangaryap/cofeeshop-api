@@ -5,5 +5,5 @@ export const authRouter = Router();
 
 authRouter.post("/login", login)
 authRouter.post("/register", register)
-authRouter.get("/", FetchAll)
+authRouter.get("/",FetchAll)
 authRouter.patch("/setting/:id", update)

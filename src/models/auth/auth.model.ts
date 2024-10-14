@@ -1,13 +1,20 @@
-
 export interface IAuth {
-    user_pass: string;
-    uuid: string;
-    id: string;
-    role:string;
+  user_pass: string;
+  uuid: string;
+  id: string;
+  role: string;
 }
 
 export interface IUserLoginBody {
-    user_email: string;
-    user_pass: string;
+  user_email: string;
+  user_pass: string;
+  uuid: string;
+}
+
+/* export interface IAuthResponse extends IBasicResponse {
+  data?: {
+    token: string;
     uuid: string;
-  }
+    id:string;
+  }[];
+} */

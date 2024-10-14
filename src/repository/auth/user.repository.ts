@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResult } from "pg";
 import db from "../../configs/pg";
-import { IDataUser, IUserBody, IUsersQuery } from "../../models/auth/user.model";
+import { IDataUser, IUserBody, IUserProfileData, IUsersQuery } from "../../models/auth/user.model";
 
 export const createData = (hashedPassword: string,email: string,dbPool: Pool | PoolClient): Promise<QueryResult<IDataUser>> => {
   const query = `
@@ -11,8 +11,9 @@ export const createData = (hashedPassword: string,email: string,dbPool: Pool | P
   return dbPool.query(query, values);
 };
 
-export const getAllData = (queryParams: IUsersQuery): Promise<QueryResult<IDataUser>> => {
-  let query = ` select id , user_email from users order by created_at asc`;
+export const getAllData = (queryParams: IUsersQuery): Promise<QueryResult<IUserProfileData>> => {
+  let query = ` select u.id, p.profile_image, p.full_name,p.phone_number,p.address , user_email from users u inner join profile p on u.id = p.user_id 
+order by created_at asc`;
   let value = [];
   const { page, limit } = queryParams;
 
@@ -53,8 +54,8 @@ export const updateData = (id: string,body: IUserBody,hashedPassword?: string): 
   return db.query(query, values);
 };
 
-export const checkIfUsereExists = async (id: string) => {
+export const checkIfUserExists = async (id: string) => {
     const query = `SELECT COUNT(*) AS count FROM users WHERE users_id = $1`;
-    const Ischeck = await db.query(query, [id]);
-    return Ischeck.rows[0].count > 0;
+    const IsCheck = await db.query(query, [id]);
+    return IsCheck.rows[0].count > 0;
 };

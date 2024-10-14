@@ -10,6 +10,7 @@ import getLink from "../../helpers/getLink";
 import { IAuthResponse } from "../../models/response";
 import { IProfileBody } from "../../models/profile.model";
 import {
+  IRegisterResponse,
   IUserRegisterBody,
   IUserResponse,
   IUsersQuery,
@@ -23,29 +24,37 @@ import {
 import { createDataProfile } from "../../repository/auth/profile.repository";
 import { GetByEmail } from "../../repository/auth/auth.repository";
 
-export const register = async (
-  req: Request<{}, {}, IUserRegisterBody>,
-  res: Response
-) => {
+
+
+
+
+export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Response<IRegisterResponse>) => {
   const client = await db.connect();
 
   try {
     await client.query("BEGIN");
-
     const { user_pass, user_email } = req.body;
 
     const emailRegex = /^[^\s@]+@gmail\.com$/;
     if (!emailRegex.test(user_email)) {
       return res.status(400).json({
+        status: "error",
         msg: "Registration failed",
-        err: "Email must end with @gmail.com.",
+        error: {
+          code: 400,
+          message: "Email must end with @gmail.com.",
+        },
       });
     }
 
     if (user_pass.length < 6) {
       return res.status(400).json({
+        status:"error",
         msg: "Registration failed",
-        err: "Password must be at least 6 characters long.",
+        error: {
+          code: 400,
+          message: "Password must be at least 6 characters long.",
+        },
       });
     }
 
@@ -67,8 +76,12 @@ export const register = async (
     if (!emailSent) {
       await client.query("ROLLBACK");
       return res.status(500).json({
+        status: "error",
         msg: "Error",
-        err: "Failed to send email",
+        error: {
+          code: 500,
+          message: "Failed to send email",
+        },
       });
     }
 
@@ -85,40 +98,54 @@ export const register = async (
     await client.query("COMMIT");
 
     return res.status(201).json({
+      status: "success",
       msg: "Register success",
-      data: createUserResult.rows[0],
+      data: createUserResult.rows,
     });
+
   } catch (err) {
     await client.query("ROLLBACK");
 
     if (err instanceof Error) {
-      if (
-        err.message.includes(
-          'duplicate key value violates unique constraint "users_user_email_key"'
-        )
-      ) {
+      if (err.message.includes('duplicate key value violates unique constraint "users_user_email_key"')) {
         return res.status(409).json({
+          status: "error",
           msg: "Registration failed",
-          err: "Email already registered. Please login or use a different email.",
+          error: {
+            code: 409,
+            message: "Email already registered. Please login or use a different email.",
+          },
         });
       }
 
       if (/(invalid(.)+id(.)+)/g.test(err.message)) {
         return res.status(401).json({
+          status: "error",
           msg: "Error",
-          err: "User not found",
+          error: {
+            code: 401,
+            message: "User not found",
+          },
         });
       }
 
       return res.status(400).json({
+        status: "error",
         msg: "Error",
-        err: err.message,
+        error: {
+          code: 400,
+          message: err.message,
+        },
       });
     }
 
     return res.status(500).json({
+      status: "error",
       msg: "Error",
-      err: "Internal Server Error",
+      error: {
+        code: 500,
+        message: "Internal Server Error",
+      },
     });
   } finally {
     client.release();
@@ -152,7 +179,7 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
 
     return res.status(200).json({
       msg: `Welcome, ${user_email}!`,
-      data: [{ token, uuid, id, role }]
+      data: [{ token, uuid, id , role}]
     });
 
   } catch (error) {
@@ -175,15 +202,22 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
   }
 };
 
-export const FetchAll = async ( req: Request<{}, {}, {}, IUsersQuery>, res: Response<IUserResponse>) => {
+export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Response<IUserResponse>) => {
   try {
-    const query = req.query as unknown as IUsersQuery;
+    const result = await getAllData(req.query);
+    if (!result || !result.rows.length) {
+      return res.status(404).json({
+        msg: "Error",
+        err: "Data Not Found",
+      });
+    }
 
-    const result = await getAllData(query);
-    const dataUser = await getTotalData();
-    const page = parseInt((req.query.page as string) || "1", 10);
-    const totalData = parseInt(dataUser.rows[0].total_user);
-    const totalPage = Math.ceil(totalData / parseInt(query.limit || "2", 10));
+    const dataProduct = await getTotalData();
+    const page = parseInt(req.query.page as string) || 1; // Default to 1
+    const limit = parseInt(req.query.limit as string) || 4; // Default to 4
+    const totalData = parseInt(dataProduct.rows[0]?.total_user || "0", 10);
+    const totalPage = Math.ceil(totalData / limit);
+
     const response = {
       msg: "success",
       data: result.rows,
@@ -192,14 +226,14 @@ export const FetchAll = async ( req: Request<{}, {}, {}, IUsersQuery>, res: Resp
         totalPage,
         page,
         prevLink: page > 1 ? getLink(req, "previous") : null,
-        nextLink: page != totalPage ? getLink(req, "next") : null,
+        nextLink: page < totalPage ? getLink(req, "next") : null,
       },
     };
 
     return res.status(200).json(response);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      console.log(err.message);
+      console.error(err.message);
     }
     return res.status(500).json({
       msg: "Error",
