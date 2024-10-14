@@ -15,7 +15,6 @@ import { createDataProfile } from "../../repository/auth/profile.repository";
 import { GetByEmail } from "../../repository/auth/auth.repository";
 
 
-
 export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Response<IRegisterResponse>) => {
   const client = await db.connect();
 
