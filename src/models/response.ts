@@ -7,13 +7,12 @@ interface IPaginationMeta {
 }
 
 interface IErrorResponse {
-    code: number; 
     message: string; 
     details?: string; 
 }
 
-export interface IBasicResponse1 {
-    status:string;
+export interface IBasicResponse1{
+    code:number;
     msg: string; 
     data?: any[];
     error?: IErrorResponse;
@@ -25,14 +24,4 @@ export interface IBasicResponse {
     data?: any[];
     err?: string;
     meta?: IPaginationMeta;
-}
-
-
-export interface IAuthResponse extends IBasicResponse {
-    data?: Array<{
-        token: string;
-        uuid: string;
-        id: string;
-        role:string;
-    }>;
 }

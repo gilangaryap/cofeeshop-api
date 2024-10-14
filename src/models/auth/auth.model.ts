@@ -1,3 +1,5 @@
+import { IBasicResponse1 } from "../response";
+
 export interface IAuth {
   user_pass: string;
   uuid: string;
@@ -11,10 +13,11 @@ export interface IUserLoginBody {
   uuid: string;
 }
 
-/* export interface IAuthResponse extends IBasicResponse {
-  data?: {
-    token: string;
-    uuid: string;
-    id:string;
-  }[];
-} */
+export interface IAuthResponse extends IBasicResponse1 {
+  data?: Array<{
+      token: string;
+      uuid: string;
+      id: string;
+      role:string;
+  }>;
+}

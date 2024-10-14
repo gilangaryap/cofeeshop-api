@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IUserLoginBody } from "../../models/auth/auth.model";
+import { IAuthResponse, IUserLoginBody } from "../../models/auth/auth.model";
 import bcrypt from "bcrypt";
 import { IPayload } from "../../models/auth/payload";
 import jwt from "jsonwebtoken";
@@ -7,10 +7,10 @@ import { jwtOptions } from "../../middleware/authorization.middleware";
 import db from "../../configs/pg";
 import sendMail from "../../helpers/nodemailer";
 import getLink from "../../helpers/getLink";
-import { IAuthResponse } from "../../models/response";
 import { IProfileBody } from "../../models/profile.model";
 import {
   IRegisterResponse,
+  IUserProfileResponse,
   IUserRegisterBody,
   IUserResponse,
   IUsersQuery,
@@ -26,8 +26,6 @@ import { GetByEmail } from "../../repository/auth/auth.repository";
 
 
 
-
-
 export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Response<IRegisterResponse>) => {
   const client = await db.connect();
 
@@ -38,10 +36,9 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
     const emailRegex = /^[^\s@]+@gmail\.com$/;
     if (!emailRegex.test(user_email)) {
       return res.status(400).json({
-        status: "error",
+        code: 400,
         msg: "Registration failed",
         error: {
-          code: 400,
           message: "Email must end with @gmail.com.",
         },
       });
@@ -49,10 +46,9 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
 
     if (user_pass.length < 6) {
       return res.status(400).json({
-        status:"error",
+        code:400,
         msg: "Registration failed",
         error: {
-          code: 400,
           message: "Password must be at least 6 characters long.",
         },
       });
@@ -76,10 +72,9 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
     if (!emailSent) {
       await client.query("ROLLBACK");
       return res.status(500).json({
-        status: "error",
+        code: 500,
         msg: "Error",
         error: {
-          code: 500,
           message: "Failed to send email",
         },
       });
@@ -98,7 +93,7 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
     await client.query("COMMIT");
 
     return res.status(201).json({
-      status: "success",
+      code: 201,
       msg: "Register success",
       data: createUserResult.rows,
     });
@@ -109,10 +104,9 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
     if (err instanceof Error) {
       if (err.message.includes('duplicate key value violates unique constraint "users_user_email_key"')) {
         return res.status(409).json({
-          status: "error",
+          code: 409,
           msg: "Registration failed",
           error: {
-            code: 409,
             message: "Email already registered. Please login or use a different email.",
           },
         });
@@ -120,30 +114,27 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
 
       if (/(invalid(.)+id(.)+)/g.test(err.message)) {
         return res.status(401).json({
-          status: "error",
+          code: 401,
           msg: "Error",
           error: {
-            code: 401,
             message: "User not found",
           },
         });
       }
 
       return res.status(400).json({
-        status: "error",
+        code: 400,
         msg: "Error",
         error: {
-          code: 400,
           message: err.message,
         },
       });
     }
 
     return res.status(500).json({
-      status: "error",
+      code: 500,
       msg: "Error",
       error: {
-        code: 500,
         message: "Internal Server Error",
       },
     });
@@ -151,6 +142,7 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
     client.release();
   }
 };
+
 
 export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response<IAuthResponse>) => {
   const { user_email, user_pass } = req.body;
@@ -178,6 +170,7 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
     );
 
     return res.status(200).json({
+      code:200,
       msg: `Welcome, ${user_email}!`,
       data: [{ token, uuid, id , role}]
     });
@@ -186,29 +179,44 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
     if (error instanceof Error) {
       if (/(invalid(.)+id(.)+)/g.test(error.message)) {
         return res.status(401).json({
+          code: 401,
           msg: "Error",
-          err: "User not found",
+          error: {
+            message: "User not found",
+          },
         });
       }
+
       return res.status(401).json({
+        code: 401,
         msg: "Error",
-        err: error.message,
+        error: {
+          message: error.message,
+        },
       });
     }
+
     return res.status(500).json({
+      code: 500,
       msg: "Error",
-      err: "Internal Server Error",
+      error: {
+        message: "Internal Server Error",
+      },
     });
   }
 };
 
-export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Response<IUserResponse>) => {
+
+export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Response<IUserProfileResponse>) => {
   try {
     const result = await getAllData(req.query);
     if (!result || !result.rows.length) {
       return res.status(404).json({
+        code: 404,
         msg: "Error",
-        err: "Data Not Found",
+        error: {
+          message: "Data Not Found",
+        },
       });
     }
 
@@ -219,7 +227,8 @@ export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Respo
     const totalPage = Math.ceil(totalData / limit);
 
     const response = {
-      msg: "success",
+      code: 200,
+      msg: "User profile successfully retrieved",
       data: result.rows,
       meta: {
         totalData,
@@ -235,22 +244,29 @@ export const FetchAll = async (req: Request<{}, {}, {}, IUsersQuery>, res: Respo
     if (err instanceof Error) {
       console.error(err.message);
     }
+
     return res.status(500).json({
+      code: 500,
       msg: "Error",
-      err: "Internal Server Error",
+      error: {
+        message: "Internal Server Error",
+      },
     });
   }
 };
 
-export const update = async (req: Request, res: Response<IUserResponse>) => {
+export const update = async (req: Request, res: Response<IRegisterResponse>) => {
   const { id } = req.params;
   const { user_pass } = req.body;
 
   try {
     if (user_pass && user_pass.length < 6) {
       return res.status(400).json({
+        code: 400,
         msg: "Registration failed",
-        err: "Password must be at least 6 characters long.",
+        error: {
+          message: "Password must be at least 6 characters long.",
+        },
       });
     }
 
@@ -267,24 +283,34 @@ export const update = async (req: Request, res: Response<IUserResponse>) => {
 
     const result = await updateData(id, updatePayload);
     return res.status(200).json({
+      code: 200,
       msg: "User has been upgraded",
       data: result.rows,
     });
+
   } catch (err: unknown) {
     let errorMessage = "Internal Server Error";
+
     if (err instanceof Error) {
       errorMessage = err.message;
+
       if (errorMessage.includes('syntax error at or near "WHERE"')) {
-        errorMessage = "Error in writing email";
         return res.status(400).json({
+          code: 400,
           msg: "Error",
-          err: errorMessage,
+          error: {
+            message: "Error in the database query.",
+          },
         });
       }
     }
+
     return res.status(500).json({
+      code: 500,
       msg: "Error",
-      err: errorMessage,
+      error: {
+        message: errorMessage,
+      },
     });
   }
 };

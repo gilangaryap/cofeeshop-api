@@ -19,16 +19,6 @@ export interface IUserRegisterBody extends IUserBody {
   user_pass: string;
 }
 
-export interface IUserLoginBody {
-  user_email: string;
-  user_pass: string;
-  uuid: string;
-}
-
-export interface IUserBody {
-  user_email: string;
-}
-
 export interface IUserProfileData {
   id: string;
   profile_image: string;
@@ -38,10 +28,12 @@ export interface IUserProfileData {
   user_email: string;
 }
 
+export interface IUserBody {
+  user_email: string;
+}
+
 export interface IDataUser extends IUserBody {
   id: string;
-  created_at?: string;
-  updated_at?: string | null;
 }
 
 export interface IUserResponse extends IBasicResponse {
@@ -50,4 +42,8 @@ export interface IUserResponse extends IBasicResponse {
 
 export interface IRegisterResponse extends IBasicResponse1 {
   data?: IDataUser[];
+}
+
+export interface IUserProfileResponse extends IBasicResponse1{
+  data?: IUserProfileData[]
 }
