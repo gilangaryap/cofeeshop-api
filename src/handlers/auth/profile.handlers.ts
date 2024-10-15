@@ -14,7 +14,8 @@ export const Update = async (req: Request, res: Response) => {
     let profileImage: string | undefined;
 
     if (file) {
-      const { result , error } = await cloudinarySingleUploader(req, "product-image" , id);
+      const profileID = id.split('-')[1];
+      const { result , error } = await cloudinarySingleUploader(req, "product-image" , profileID);
       if (error) {
         throw new Error(error.message);
       }
