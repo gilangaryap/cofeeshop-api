@@ -1,24 +1,7 @@
-import multer, {
-  Field,
-  Options,
-  StorageEngine,
-  diskStorage,
-  memoryStorage,
-} from "multer";
+import multer, {Field,Options,StorageEngine,memoryStorage,} from "multer";
 import path from "path";
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { AppParams } from "../models/params.model";
 
-const multerDisk = diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "/public/imgs");
-  },
-  filename: (req, file, cb) => {
-    const extName = path.extname(file.originalname);
-    const newFileName = `image-${Date.now()}${extName}`;
-    cb(null, newFileName);
-  },
-});
 
 const multerMemory = memoryStorage();
 
@@ -37,7 +20,6 @@ const createMulterOptions = (storageEngine: StorageEngine): Options => ({
   },
 });
 
-const uploader = multer(createMulterOptions(multerDisk));
 const cloudUploader = multer(createMulterOptions(multerMemory));
 
 export const singleCloudUploader = (fieldName: string) => {
@@ -207,9 +189,4 @@ export const multiFieldCloudUploader = (fieldName: Field[]) => {
   };
 };
 
-export const singleUploader = (fieldName: string) =>
-  uploader.single(fieldName) as RequestHandler<AppParams>;
-export const multiUploader = (fieldName: string, maxCount: number) =>
-  uploader.array(fieldName, maxCount);
-export const multiFieldUploader = (fieldConfig: Field[]) =>
-  uploader.fields(fieldConfig);
+

@@ -4,11 +4,11 @@ import DataURIParser from "datauri/parser";
 import path from 'path';
 import { Request } from "express-serve-static-core";
 
-export interface CustomRequest extends Request {
+export interface CustomFilesRequest extends Request {
   files?: Express.Multer.File[];
 }
 
-export const cloudinaryUploader = async (req: CustomRequest, prefix: string): Promise<{ results?: UploadApiResponse[]; errors?: Error[] }> => {
+export const cloudinaryUploader = async (req: CustomFilesRequest, prefix: string): Promise<{ results?: UploadApiResponse[]; errors?: Error[] }> => {
   
   const files = req.files; 
   if (!files || files.length === 0) return { errors: [new Error("No files found")] };

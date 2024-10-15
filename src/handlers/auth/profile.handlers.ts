@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
-import { cloudinaryUploader, CustomRequest } from "../../helpers/cloudinary";
-import { getDetailData, updateData } from "../../repository/auth/profile.repository";
-import { IDataProfileResponse, IDetailDataResponse } from "../../models/auth/profile.model";
-
-
-
-
+import { getDetailData,  } from "../../repository/auth/profile.repository";
+import { IDetailDataResponse } from "../../models/auth/profile.model";
 
 export const FetchDetail = async (req: Request, res: Response<IDetailDataResponse>) => {
   const { id } = req.params;
