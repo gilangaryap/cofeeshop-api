@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IProductBody, IProductQuery, IProductResponse } from '../../models/products/product.model';
 import db from "../../configs/pg";
 import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData } from "../../repository/products/product.repository";
-import { cloudinaryUploader, CustomFilesRequest } from "../../helpers/cloudinary";
+import { cloudinaryArrayUploader, CustomFilesRequest } from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
 export const create = async (req: Request<{}, {}, IProductBody>, res: Response) => {
@@ -30,7 +30,7 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
 
     console.log("Uploaded files:", files);
 
-    const { results, errors } = await cloudinaryUploader(req as CustomFilesRequest, `product-${productId}`);
+    const { results, errors } = await cloudinaryArrayUploader(req as CustomFilesRequest, `product-${productId}`);
 
     if (errors && errors.length > 0) {
       throw new Error(`Failed to upload images: ${errors.map(err => err.message).join(', ')}`);
