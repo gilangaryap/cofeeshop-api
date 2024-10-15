@@ -1,4 +1,4 @@
-import { IBasicResponse } from "../response";
+import { IBasicResponse, IBasicResponse1 } from "../response";
 
 export interface IProductBody {
     product_name?: string;
@@ -7,6 +7,12 @@ export interface IProductBody {
     product_description?: string;
     category_id?: string;
     product_stock?: string;
+}
+
+export interface IProductImage {
+    id:string;
+    product_id:string;
+    img_product:string;
 }
 
 export interface IDataProduct extends IProductBody {
@@ -43,3 +49,8 @@ export interface IProductResponse extends IBasicResponse {
 export interface IProductWithImageProductResponse extends IBasicResponse {
     data?: [ IDataProduct[] , IDataProduct[] ]
 }
+
+export interface ICreateSuccessResponse extends IBasicResponse1 {
+    data?: (IDataProduct | IProductImage)[];
+}
+

@@ -1,21 +1,22 @@
 import { Request, Response } from "express";
-import { IProductBody, IProductQuery, IProductResponse } from '../../models/products/product.model';
+import { ICreateSuccessResponse, IProductBody, IProductQuery, IProductResponse,} from "../../models/products/product.model";
 import db from "../../configs/pg";
-import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData } from "../../repository/products/product.repository";
-import { cloudinaryArrayUploader, CustomFilesRequest } from "../../helpers/cloudinary";
+import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData,} from "../../repository/products/product.repository";
+import { cloudinaryArrayUploader, CustomFilesRequest,} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
-export const create = async (req: Request<{}, {}, IProductBody>, res: Response) => {
+export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<ICreateSuccessResponse>) => {
+  
   const client = await db.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
     console.log("Request body:", req.body);
 
     const productResult = await createData(req.body);
     const product = productResult.rows[0];
 
     if (!product || !product.id) {
-      throw new Error('Failed to create product');
+      throw new Error("Failed to create product");
     }
 
     const productId = product.id;
@@ -23,76 +24,94 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
 
     if (!files || files.length === 0) {
       return res.status(400).json({
+        code: 400,
         msg: "Error",
-        err: "Product images cannot be null",
+        error: { message: "Product images cannot be null" },
       });
     }
 
-    console.log("Uploaded files:", files);
-
-    const { results, errors } = await cloudinaryArrayUploader(req as CustomFilesRequest, `product-${productId}`);
+    const { results, errors } = await cloudinaryArrayUploader(
+      req as CustomFilesRequest,
+      `product-${productId}`
+    );
 
     if (errors && errors.length > 0) {
-      throw new Error(`Failed to upload images: ${errors.map(err => err.message).join(', ')}`);
+      throw new Error(
+        `Failed to upload images: ${errors
+          .map((err) => err.message)
+          .join(", ")}`
+      );
     }
 
-    const secureUrls = results?.map(result => result.secure_url) || [];
+    const secureUrls = results?.map((result) => result.secure_url) || [];
 
-    // Save image URLs to the database
-    const imgPromises = secureUrls.map(url => createDataImage(client, productId, url));
+    const imgPromises = secureUrls.map((url) =>
+      createDataImage(client, productId, url)
+    );
     const imgResults = await Promise.all(imgPromises);
-    const imgProducts = imgResults.map(res => res.rows[0]);
+    const imgProducts = imgResults.map((res) => res.rows[0]);
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     return res.status(201).json({
-      status: 'success',
-      data: {
-        product,
-        imgProducts,
-      },
+      code: 201,
+      msg: "Product created successfully",
+      data: [product,...imgProducts],
     });
-
   } catch (err) {
     console.error("Error in createNewProduct:", err);
 
     try {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
     } catch (rollbackErr) {
       console.error("Rollback error:", rollbackErr);
     }
 
-    // Improved error handling
     if (err instanceof Error) {
-      if (err.message.includes('duplicate key value violates unique constraint "product_name"')) {
+      if (
+        err.message.includes(
+          'duplicate key value violates unique constraint "product_name"'
+        )
+      ) {
         return res.status(400).json({
+          code: 400,
           msg: "Error",
-          err: "Product name already exists",
+          error: {
+            message: "Product name already exists",
+          },
         });
       }
       if (err.message.includes("No files uploaded")) {
         return res.status(400).json({
+          code: 400,
           msg: "Error",
-          err: "Product images cannot be null",
+          error: {
+            message: "Product images cannot be null",
+          },
         });
       }
       return res.status(500).json({
+        code: 500,
         msg: "Error",
-        err: err.message, 
+        error: {
+          message: err.message,
+        },
       });
     }
 
     return res.status(500).json({
+      code: 500,
       msg: "Error",
-      err: "Internal Server Error",
+      error: {
+        message: "Internal Server Error",
+      },
     });
   } finally {
     client.release();
   }
 };
 
-
-export const FetchAll = async (req: Request<{}, {}, {}, IProductQuery>,res: Response<IProductResponse>) => {
+export const FetchAll = async ( req: Request<{}, {}, {}, IProductQuery>, res: Response<IProductResponse>) => {
   try {
     const result = await getAllData(req.query);
     if (!result) {
@@ -141,14 +160,14 @@ export const FetchAll = async (req: Request<{}, {}, {}, IProductQuery>,res: Resp
   }
 };
 
-export const FetchDetailImg = async (req: Request,res: Response) => {
+export const FetchDetailImg = async (req: Request, res: Response) => {
   const { uuid } = req.params;
   try {
     const result = await getDetailProductImg(uuid);
     return res.status(201).json({
       msg: "success",
       data: result.rows,
-    })
+    });
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.log(err.message);
@@ -159,7 +178,6 @@ export const FetchDetailImg = async (req: Request,res: Response) => {
     });
   }
 };
-
 
 export const FetchDetail = async (req: Request, res: Response) => {
   const client = await db.connect();
@@ -187,7 +205,7 @@ export const FetchDetail = async (req: Request, res: Response) => {
       }
 
       // Get product image
-      const imgProduct = await getImgData(client , productId);
+      const imgProduct = await getImgData(client, productId);
 
       await client.query("COMMIT");
 
