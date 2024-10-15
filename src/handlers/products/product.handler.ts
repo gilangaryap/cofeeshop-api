@@ -2,43 +2,46 @@ import { Request, Response } from "express";
 import { IProductBody, IProductQuery, IProductResponse } from '../../models/products/product.model';
 import db from "../../configs/pg";
 import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData } from "../../repository/products/product.repository";
-import { cloudinaryUploader } from "../../helpers/cloudinary";
+import { cloudinaryUploader, CustomRequest } from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
 export const create = async (req: Request<{}, {}, IProductBody>, res: Response) => {
   const client = await db.connect();
   try {
-
     await client.query('BEGIN');
+    console.log("Request body:", req.body);
 
     const productResult = await createData(req.body);
     const product = productResult.rows[0];
 
-    if (!product || !product.product_name) {
-      throw new Error('Failed to create product: product_name is undefined');
-    }
-
-    const resultName = product.product_name.split(' ')[0];
-    if (!resultName) {
+    if (!product || !product.id) {
       throw new Error('Failed to create product');
     }
 
     const productId = product.id;
-    if (!productId) {
-      throw new Error('Failed to create product');
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        msg: "Error",
+        err: "Product images cannot be null",
+      });
     }
 
-    console.log("file: ",File)
-    const { result, error } = await cloudinaryUploader(req, 'product', resultName);
-    if (error) {
-      throw new Error(error.message);
-    }
-    if (!result || !result.secure_url) {
-      throw new Error('Failed to upload image');
+    console.log("Uploaded files:", files);
+
+    const { results, errors } = await cloudinaryUploader(req as CustomRequest, `product-${productId}`);
+
+    if (errors && errors.length > 0) {
+      throw new Error(`Failed to upload images: ${errors.map(err => err.message).join(', ')}`);
     }
 
-    const imgProductResult = await createDataImage(client, productId, result.secure_url);
-    const imgProduct = imgProductResult.rows[0];
+    const secureUrls = results?.map(result => result.secure_url) || [];
+
+    // Save image URLs to the database
+    const imgPromises = secureUrls.map(url => createDataImage(client, productId, url));
+    const imgResults = await Promise.all(imgPromises);
+    const imgProducts = imgResults.map(res => res.rows[0]);
 
     await client.query('COMMIT');
 
@@ -46,7 +49,7 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
       status: 'success',
       data: {
         product,
-        imgProduct,
+        imgProducts,
       },
     });
 
@@ -59,23 +62,24 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
       console.error("Rollback error:", rollbackErr);
     }
 
+    // Improved error handling
     if (err instanceof Error) {
-      if (
-        err.message.includes(
-          'duplicate key value violates unique constraint "product_name"'
-        )
-      ) {
+      if (err.message.includes('duplicate key value violates unique constraint "product_name"')) {
         return res.status(400).json({
           msg: "Error",
           err: "Product name already exists",
         });
       }
-      if (err.message.includes("File not found")) {
+      if (err.message.includes("No files uploaded")) {
         return res.status(400).json({
           msg: "Error",
-          err: "Product image cannot be null",
+          err: "Product images cannot be null",
         });
       }
+      return res.status(500).json({
+        msg: "Error",
+        err: err.message, 
+      });
     }
 
     return res.status(500).json({
@@ -86,6 +90,7 @@ export const create = async (req: Request<{}, {}, IProductBody>, res: Response) 
     client.release();
   }
 };
+
 
 export const FetchAll = async (req: Request<{}, {}, {}, IProductQuery>,res: Response<IProductResponse>) => {
   try {
@@ -208,7 +213,7 @@ export const FetchDetail = async (req: Request, res: Response) => {
   }
 };
 
-export const update = async (req: Request, res: Response) => {
+/* export const update = async (req: Request, res: Response) => {
   try {
     const client = await db.connect();
     const {file,params: { uuid },body,} = req;
@@ -278,4 +283,4 @@ export const update = async (req: Request, res: Response) => {
       });
     }
   }
-};
+}; */

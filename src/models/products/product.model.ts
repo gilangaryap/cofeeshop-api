@@ -2,12 +2,11 @@ import { IBasicResponse } from "../response";
 
 export interface IProductBody {
     product_name?: string;
-    product_price?: number;
-    discount_price?: number;
+    product_price?: string;
+    discount_price?: string;
     product_description?: string;
-    category_id?: number;
-    product_stock?: number;
-    img_product?:string;
+    category_id?: string;
+    product_stock?: string;
 }
 
 export interface IDataProduct extends IProductBody {

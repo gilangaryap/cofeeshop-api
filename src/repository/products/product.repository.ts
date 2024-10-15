@@ -9,37 +9,14 @@ import db from "../../configs/pg";
 export const createData = ( body: IProductBody): Promise<QueryResult<IDataProduct>> => {
   const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
     values ($1, $2, $3, $4, $5)
-    returning product_name , product_price , product_description , category_id , product_stock , created_at `;
-  const {
-    product_name,
-    product_price,
-    product_description,
-    category_id,
-    product_stock,
-  } = body;
-  const values = [
-    product_name,
-    product_price,
-    product_description,
-    category_id,
-    product_stock,
-  ];
-  console.log(
-    "ini dari clg: ",
-    product_name,
-    product_price,
-    product_description,
-    category_id,
-    product_stock
-  );
+    returning id ,  product_name , product_price , product_description , category_id , product_stock , created_at `;
+  const { product_name, product_price, product_description, category_id, product_stock} = body;
+  const values = [ product_name, product_price, product_description, category_id, product_stock];
+  console.log("ini: ",values)
   return db.query(query, values);
 };
 
-export const createDataImage = (
-  dbPool: Pool | PoolClient,
-  id: string,
-  imgUrl?: string
-): Promise<QueryResult<IDataProduct>> => {
+export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?: string): Promise<QueryResult<IDataProduct>> => {
   let query = `insert into image_product ( img_product , product_id)
       values `;
   const values: (string | null)[] = [];
@@ -47,6 +24,7 @@ export const createDataImage = (
   query += ` ($${values.length + 1}, $${values.length + 2})`;
   values.push(imgUrlValue, id);
   query += ` returning * `;
+  console.log(query, values)
   return dbPool.query(query, values);
 };
 
@@ -221,7 +199,7 @@ export const updateData = (
     hasUpdates = true;
   }
 
-  if (product_price && product_price > 0) {
+  if (product_price && product_price ) {
     query += `product_price = $${values.length + 1}, `;
     values.push(product_price);
     hasUpdates = true;
@@ -233,7 +211,7 @@ export const updateData = (
     hasUpdates = true;
   }
 
-  if (category_id && category_id > 0) {
+  if (category_id && category_id ) {
     query += `category_id = $${values.length + 1}, `;
     values.push(category_id);
     hasUpdates = true;

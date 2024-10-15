@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IPromoBody } from "../../models/products/promo.model";
 import { createData } from "../../repository/products/promo.repository";
 import { cloudinaryUploader } from "../../helpers/cloudinary";
-
+/* 
 export const create = async (req: Request<{}, {}, IPromoBody>,res: Response) => {
     try {
         const name = req.body.product_id;
@@ -51,4 +51,4 @@ export const create = async (req: Request<{}, {}, IPromoBody>,res: Response) => 
           });
       }
     }
-};
+}; */

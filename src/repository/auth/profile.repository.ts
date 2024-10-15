@@ -12,6 +12,7 @@ export const createDataProfile = async (id: string, body: IProfileBody,dbPool: P
   return dbPool.query(query, values);
 }
 
+
 export const updateData = (id: string,body: IProfileBody,imgUrl?:string): Promise<QueryResult<IDataProfile>> => {
     let query = "";
     let values = [];
@@ -37,8 +38,6 @@ export const updateData = (id: string,body: IProfileBody,imgUrl?:string): Promis
       query += `profile_image = $${values.length + 1}, `;
       values.push(imgUrl);
     }
-
-    query += `updated_at = NOW(), `;
     
     query = `UPDATE profile SET ${query.slice(0, -2)} WHERE user_id = $${
       values.length + 1
@@ -47,6 +46,8 @@ export const updateData = (id: string,body: IProfileBody,imgUrl?:string): Promis
       
     return db.query(query, values);
 };
+
+
 
 export const getDetailData = (id:string): Promise<QueryResult<IDetailData>> => {
     const query = `SELECT p.full_name, p.phone_number, p.address, p.profile_image, s.user_email , to_char(s.created_at, 'DD Month YYYY') AS created_at  FROM profile p INNER JOIN users s on p.user_id = s.id WHERE p.user_id = $1;`
