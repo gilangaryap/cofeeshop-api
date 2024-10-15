@@ -5,5 +5,5 @@ import { authorization } from "../middleware/authorization.middleware";
 export const categoryRouter = Router()
 
 categoryRouter.post("/add", create);
-categoryRouter.get("/",FetchAll);
-categoryRouter.patch("/setting/:id",authorization('ADMIN'),update);
+categoryRouter.get("/",authorization('ADMIN'),FetchAll);
+categoryRouter.patch("/setting/:id",update);

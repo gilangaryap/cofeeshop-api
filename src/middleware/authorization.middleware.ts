@@ -38,7 +38,7 @@ export const authorization =(roles: string) =>(req: Request<AppParams>, res: Res
         }
 
         const userPayload = payload as IPayload;
-        if (roles && !roles.includes(userPayload.iss)) {
+        if (roles && !roles.includes(userPayload.role)) {
           return res.status(403).json({
             code: 403,
             msg: "Forbidden",

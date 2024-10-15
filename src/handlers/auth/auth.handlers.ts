@@ -7,12 +7,13 @@ import { jwtOptions } from "../../middleware/authorization.middleware";
 import db from "../../configs/pg";
 import sendMail from "../../helpers/nodemailer";
 import getLink from "../../helpers/getLink";
-import { IProfileBody } from "../../models/profile.model";
 import { IRegisterResponse, IUserProfileResponse, IUserRegisterBody, IUsersQuery,} from "../../models/auth/user.model";
 import { createData, getAllData, getTotalData, updateData,
 } from "../../repository/auth/user.repository";
 import { createDataProfile } from "../../repository/auth/profile.repository";
 import { GetByEmail } from "../../repository/auth/auth.repository";
+import { IProfileBody } from "../../models/auth/profile.model";
+
 
 
 export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Response<IRegisterResponse>) => {
@@ -141,7 +142,8 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
     if (!result.rows.length)
       throw new Error("The email you entered is incorrect");
 
-    const { user_pass: hash, uuid, id , role } = result.rows[0];
+    const { user_pass: hash, id, role } = result.rows[0];
+    console.log('Fetched role from DB:', role);
 
     const isPwdValid = await bcrypt.compare(user_pass, hash);
     if (!isPwdValid) 
@@ -149,7 +151,7 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
 
     const payload: IPayload = {
       user_email: user_email,
-      iss: role,
+      role: role,
     };
 
     const token = jwt.sign(
@@ -161,7 +163,7 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
     return res.status(200).json({
       code:200,
       msg: `Welcome, ${user_email}!`,
-      data: [{ token, uuid, id , role}]
+      data: [{ token, id , role}]
     });
 
   } catch (error) {
