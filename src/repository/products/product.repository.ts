@@ -212,7 +212,6 @@ export const delateImage = (id: string) => {
 
 export const DelateData = async (uuid: string): Promise<string> => {
   const query = 'UPDATE products SET isdelete = true WHERE uuid = $1';
-
   try {
     await db.query(query, [uuid]);
     return 'Product successfully deleted';
