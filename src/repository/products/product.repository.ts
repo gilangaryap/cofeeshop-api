@@ -143,7 +143,7 @@ FROM (
 };
 
 export const getTotalData = (): Promise< QueryResult<{ total_product: string }>> => {
-  let query = "select count(*) as total_product from products";
+  let query = "SELECT COUNT(*) AS total_product FROM products WHERE isdelete = false";
   return db.query(query);
 };
 
@@ -211,7 +211,7 @@ export const delateImage = (id: string) => {
 }
 
 export const DelateData = (uuid:string) => {
-  const query = `UPDATE products SET isdelete = false WHERE uuid = $1`
+  const query = `UPDATE products SET isdelete = true WHERE uuid = $1`
   const value = [uuid];
   return db.query(query , value)
 }

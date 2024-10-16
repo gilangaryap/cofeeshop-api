@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ICreateSuccessResponse, IProductBody, IProductQuery, IProductResponse,} from "../../models/products/product.model";
 import db from "../../configs/pg";
-import { createData, createDataImage, delateImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData,} from "../../repository/products/product.repository";
+import { createData, createDataImage, delateImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData, DelateData } from '../../repository/products/product.repository';
 import { cloudinaryArrayUploader} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
@@ -324,4 +324,21 @@ export const update = async (req: Request, res: Response) => {
       });
   }
 };
+
+export const Delate = async (req: Request, res: Response) => {
+  const { uuid } = req.params;
+  try {
+      const product = await DelateData(uuid); 
+      return res.status(200).json({
+          msg: "Success",
+          data: product.rows,
+      });
+  } catch (err: unknown) {
+    let errorMessage = "Internal Server Error";
+    return res.status(500).json({
+      msg: "Error",
+      err: errorMessage,
+  });
+  }
+}
 
