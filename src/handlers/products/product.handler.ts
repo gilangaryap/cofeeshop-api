@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ICreateSuccessResponse, IProductBody, IProductQuery, IProductResponse,} from "../../models/products/product.model";
 import db from "../../configs/pg";
 import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData,} from "../../repository/products/product.repository";
-import { cloudinaryArrayUploader, CustomFilesRequest,} from "../../helpers/cloudinary";
+import { cloudinaryArrayUploader} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
 export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<ICreateSuccessResponse>) => {
@@ -30,10 +30,7 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
       });
     }
 
-    const { results, errors } = await cloudinaryArrayUploader(
-      req as CustomFilesRequest,
-      `product-${productId}`
-    );
+    const { results, errors } = await cloudinaryArrayUploader( req , `product-${productId}`);
 
     if (errors && errors.length > 0) {
       throw new Error(

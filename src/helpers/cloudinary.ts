@@ -4,13 +4,9 @@ import DataURIParser from "datauri/parser";
 import path from 'path';
 import { Request } from "express-serve-static-core";
 
-export interface CustomFilesRequest extends Request {
-  files?: Express.Multer.File[];
-}
 
-export const cloudinaryArrayUploader = async (req: CustomFilesRequest, prefix: string): Promise<{ results?: UploadApiResponse[]; errors?: Error[] }> => {
-  
-  const files = req.files; 
+export const cloudinaryArrayUploader = async (req: Request, prefix: string): Promise<{ results?: UploadApiResponse[]; errors?: Error[] }> => {
+  const files = req.files as Express.Multer.File[];
   if (!files || files.length === 0) return { errors: [new Error("No files found")] };
 
   const parser = new DataURIParser();
