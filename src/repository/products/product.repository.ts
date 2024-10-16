@@ -1,5 +1,5 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import { IDataProduct, IProductBody, IProductQuery,} from "../../models/products/product.model";
+import { IDataProduct, IImgProduct, IProductBody, IProductImage, IProductQuery,} from "../../models/products/product.model";
 import db from "../../configs/pg";
 
 export const createData = (body: IProductBody): Promise<QueryResult<IDataProduct>> => {
@@ -24,7 +24,7 @@ export const createData = (body: IProductBody): Promise<QueryResult<IDataProduct
   return db.query(query, values);
 };
 
-export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?: string): Promise<QueryResult<IDataProduct>> => {
+export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?: string): Promise<QueryResult<IProductImage>> => {
   let query = `insert into image_product ( img_product , product_id)
       values `;
   const values: (string | null)[] = [];
@@ -127,7 +127,7 @@ WHERE
   return db.query(query, [uuid]);
 };
 
-export const getImgData = async ( dbPool: Pool | PoolClient, id: string): Promise<QueryResult<{ img_product: string }>> => {
+export const getImgData = async ( dbPool: Pool | PoolClient, id: string): Promise<QueryResult<IImgProduct>> => {
   let query = `SELECT
   MAX(CASE WHEN rn = 1 THEN img_product ELSE NULL END) AS img_1,
   MAX(CASE WHEN rn = 2 THEN img_product ELSE NULL END) AS img_2,
@@ -147,9 +147,9 @@ export const getTotalData = (): Promise< QueryResult<{ total_product: string }>>
   return db.query(query);
 };
 
-export const updateData = ( id: string, body: IProductBody): Promise<QueryResult<IDataProduct>> => {
-  let query = ` `;
-  let values = [];
+export const updateData = async (id: string, body: IProductBody): Promise<QueryResult<IDataProduct>> => {
+  let queryParts: string[] = [];
+  const values: any[] = [];
   let hasUpdates = false;
 
   const {
@@ -161,50 +161,53 @@ export const updateData = ( id: string, body: IProductBody): Promise<QueryResult
   } = body;
 
   if (product_name && product_name.length > 0) {
-    query += `product_name = $${values.length + 1}, `;
+    queryParts.push(`product_name = $${values.length + 1}`);
     values.push(product_name);
     hasUpdates = true;
   }
 
-  if (product_price && product_price) {
-    query += `product_price = $${values.length + 1}, `;
+  if (product_price !== undefined) {
+    queryParts.push(`product_price = $${values.length + 1}`);
     values.push(product_price);
     hasUpdates = true;
   }
 
   if (product_description && product_description.length > 0) {
-    query += `product_description = $${values.length + 1}, `;
+    queryParts.push(`product_description = $${values.length + 1}`);
     values.push(product_description);
     hasUpdates = true;
   }
 
-  if (category_id && category_id) {
-    query += `category_id = $${values.length + 1}, `;
+  if (category_id !== undefined) {
+    queryParts.push(`category_id = $${values.length + 1}`);
     values.push(category_id);
     hasUpdates = true;
   }
 
   if (product_stock !== undefined) {
-    query += `product_stock = $${values.length + 1}, `;
+    queryParts.push(`product_stock = $${values.length + 1}`);
     values.push(product_stock);
     hasUpdates = true;
   }
 
   if (hasUpdates) {
-    query = `UPDATE products SET ${query.slice(
-      0,
-      -2
-    )}, updated_at = now() WHERE uuid = $${values.length + 1} RETURNING 
-        uuid , product_name , product_price , product_description , category_id , product_stock , updated_at  ;`;
+    const query = `
+      UPDATE products 
+      SET ${queryParts.join(', ')}, updated_at = NOW() 
+      WHERE uuid = $${values.length + 1} 
+      RETURNING uuid, product_name, product_price, product_description, category_id, product_stock, updated_at;
+    `;
     values.push(id);
-  } else {
-    query = "";
-  }
 
-  return db.query(query, values);
+    console.log(query); // Log the query for debugging
+
+    return await db.query(query, values); // Ensure you await the database query
+  } else {
+    throw new Error('No fields to update');
+  }
 };
 
-export const delateImage = (id: string) => {
+export const deleteImage = (id: string) => {
   const query = `DELETE FROM public.image_product WHERE product_id = $1`
   const value = [id];
   return db.query(query , value)

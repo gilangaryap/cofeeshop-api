@@ -252,6 +252,7 @@ export const update = async (req: Request, res: Response<IRegisterResponse>) => 
   const { user_pass } = req.body;
 
   try {
+    // Validate password length
     if (user_pass && user_pass.length < 6) {
       return res.status(400).json({
         code: 400,
@@ -262,18 +263,11 @@ export const update = async (req: Request, res: Response<IRegisterResponse>) => 
       });
     }
 
-    let hashedPassword: string | undefined;
-    if (user_pass) {
-      const salt = await bcrypt.genSalt(10);
-      hashedPassword = await bcrypt.hash(user_pass, salt);
-    }
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(user_pass, salt);
 
-    const updatePayload = { ...req.body };
-    if (hashedPassword) {
-      updatePayload.user_pass = hashedPassword; 
-    }
-
-    const result = await updateData(id, updatePayload);
+    // Update the user data in the database
+    const result = await updateData(id, req.body, hashedPassword);
     return res.status(200).json({
       code: 200,
       msg: "User has been upgraded",
@@ -286,6 +280,7 @@ export const update = async (req: Request, res: Response<IRegisterResponse>) => 
     if (err instanceof Error) {
       errorMessage = err.message;
 
+      // Specific error handling for database query issues
       if (errorMessage.includes('syntax error at or near "WHERE"')) {
         return res.status(400).json({
           code: 400,
