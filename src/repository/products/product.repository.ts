@@ -1,18 +1,26 @@
 import { Pool, PoolClient, QueryResult } from "pg";
-import {
-  IDataProduct,
-  IProductBody,
-  IProductQuery,
-} from "../../models/products/product.model";
+import { IDataProduct, IProductBody, IProductQuery,} from "../../models/products/product.model";
 import db from "../../configs/pg";
 
-export const createData = ( body: IProductBody): Promise<QueryResult<IDataProduct>> => {
+export const createData = (body: IProductBody): Promise<QueryResult<IDataProduct>> => {
   const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
     values ($1, $2, $3, $4, $5)
     returning id ,  product_name , product_price , product_description , category_id , product_stock , created_at `;
-  const { product_name, product_price, product_description, category_id, product_stock} = body;
-  const values = [ product_name, product_price, product_description, category_id, product_stock];
-  console.log("ini: ",values)
+  const {
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock,
+  } = body;
+  const values = [
+    product_name,
+    product_price,
+    product_description,
+    category_id,
+    product_stock,
+  ];
+  console.log("ini: ", values);
   return db.query(query, values);
 };
 
@@ -24,13 +32,11 @@ export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?:
   query += ` ($${values.length + 1}, $${values.length + 2})`;
   values.push(imgUrlValue, id);
   query += ` returning * `;
-  console.log(query, values)
+  console.log(query, values);
   return dbPool.query(query, values);
 };
 
-export const getAllData = async (
-  queryParams: IProductQuery
-): Promise<QueryResult<IDataProduct>> => {
+export const getAllData = async ( queryParams: IProductQuery): Promise<QueryResult<IDataProduct>> => {
   let query = ` 
       select products.uuid, products.product_name, products.product_price, products.product_description, p2.discount_price, c.categorie_name,
          (SELECT img_product FROM image_product WHERE product_id = products.id LIMIT 1) AS img_product
@@ -136,9 +142,8 @@ export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataPro
         where p.uuid = $1 `;
   return db.query(query, [uuid]);
 };
-export const getDetailProductImg = async (
-  uuid: string
-): Promise<QueryResult<IDataProduct>> => {
+
+export const getDetailProductImg = async (uuid: string): Promise<QueryResult<IDataProduct>> => {
   let query = `SELECT  p.uuid, (SELECT img_product FROM image_product WHERE product_id = p.id LIMIT 1) AS img_product, p.product_name, p.product_price, p2.discount_price
   FROM 
     products p
@@ -151,10 +156,7 @@ WHERE
   return db.query(query, [uuid]);
 };
 
-export const getImgData = async (
-  dbPool: Pool | PoolClient,
-  id: string
-): Promise<QueryResult<{ img_product: string }>> => {
+export const getImgData = async ( dbPool: Pool | PoolClient, id: string): Promise<QueryResult<{ img_product: string }>> => {
   let query = `SELECT
   MAX(CASE WHEN rn = 1 THEN img_product ELSE NULL END) AS img_1,
   MAX(CASE WHEN rn = 2 THEN img_product ELSE NULL END) AS img_2,
@@ -169,18 +171,12 @@ FROM (
   return dbPool.query(query, [id]);
 };
 
-export const getTotalData = (): Promise<
-  QueryResult<{ total_product: string }>
-> => {
+export const getTotalData = (): Promise< QueryResult<{ total_product: string }>> => {
   let query = "select count(*) as total_product from products";
   return db.query(query);
 };
 
-export const updateData = (
-  id: string,
-  body: IProductBody,
-  imgUrl?: string
-): Promise<QueryResult<IDataProduct>> => {
+export const updateData = ( id: string, body: IProductBody): Promise<QueryResult<IDataProduct>> => {
   let query = ` `;
   let values = [];
   let hasUpdates = false;
@@ -199,7 +195,7 @@ export const updateData = (
     hasUpdates = true;
   }
 
-  if (product_price && product_price ) {
+  if (product_price && product_price) {
     query += `product_price = $${values.length + 1}, `;
     values.push(product_price);
     hasUpdates = true;
@@ -211,7 +207,7 @@ export const updateData = (
     hasUpdates = true;
   }
 
-  if (category_id && category_id ) {
+  if (category_id && category_id) {
     query += `category_id = $${values.length + 1}, `;
     values.push(category_id);
     hasUpdates = true;
@@ -234,12 +230,11 @@ export const updateData = (
     query = "";
   }
 
-  if (imgUrl) {
-    query += ` UPDATE image_product SET img_product = $${
-      values.length + 1
-    } WHERE product_id = $${values.length + 2} RETURNING img_product `;
-    values.push(imgUrl ? `${imgUrl}` : null);
-  }
-
   return db.query(query, values);
 };
+
+export const delateImage = (id: string) => {
+  const query = `DELETE FROM public.image_product WHERE product_id = $1`
+  const value = [id];
+  return db.query(query , value)
+}

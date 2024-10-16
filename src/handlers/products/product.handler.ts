@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ICreateSuccessResponse, IProductBody, IProductQuery, IProductResponse,} from "../../models/products/product.model";
 import db from "../../configs/pg";
-import { createData, createDataImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData,} from "../../repository/products/product.repository";
+import { createData, createDataImage, delateImage, getAllData, getDetailData, getDetailProductImg, getImgData, getTotalData, updateData,} from "../../repository/products/product.repository";
 import { cloudinaryArrayUploader} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
@@ -228,74 +228,99 @@ export const FetchDetail = async (req: Request, res: Response) => {
   }
 };
 
-/* export const update = async (req: Request, res: Response) => {
+export const updateImage = async (req: Request, res: Response) => {
+  const client = await db.connect();
   try {
-    const client = await db.connect();
-    const {file,params: { uuid },body,} = req;
-    try {
-      await client.query("BEGIN");
+    await client.query("BEGIN");
+    const { uuid } = req.params;
+    const data = await getDetailData(uuid);
+    
+    if (!data.rows || data.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
-      // Jika hanya product body yang terisi
-      if (Object.keys(body).length > 0) {
-        const product = await updateData(uuid, req.body);
-        return res.status(201).json({
+    const productId = data.rows[0].id;
+    if (!productId) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    await delateImage(productId); 
+
+    const { results, errors } = await cloudinaryArrayUploader(req, `product-${productId}`);
+    if (errors && errors.length > 0) {
+      throw new Error(
+        `Failed to upload images: ${errors.map((err) => err.message).join(", ")}`
+      );
+    }
+
+    const secureUrls = results?.map((result) => result.secure_url) || [];
+    const imgPromises = secureUrls.map((url) => createDataImage(client, productId, url));
+    
+    const imgResults = await Promise.all(imgPromises);
+    const imgProducts = imgResults.map((res) => res.rows[0]);
+
+    await client.query("COMMIT");
+    res.status(200).json({
+      message: 'Images updated successfully',
+      images: imgProducts,
+    });
+  }catch (error) {
+    await client.query("ROLLBACK");
+
+    if (error instanceof Error) {
+      console.error(error);
+      res.status(500).json({ message: 'An error occurred', error: error.message });
+    } else {
+      console.error('Unexpected error', error);
+      res.status(500).json({ message: 'An unexpected error occurred' });
+    }
+  } finally {
+    client.release();
+  }
+};
+
+export const update = async (req: Request, res: Response) => {
+  const { uuid } = req.params;
+  try {
+      const product = await updateData(uuid, req.body);
+      if (Object.keys(req.body).length === 0) {
+        return res.status(400).json({
+            msg: "Error",
+            err: "Request body cannot be empty",
+        });
+    }    
+      console.log("body :" , req.body)
+      return res.status(200).json({
           msg: "Success",
           data: product.rows,
-        });
+      });
+  } catch (err: unknown) {
+      let errorMessage = "Internal Server Error";
+
+      if (err instanceof Error) {
+          errorMessage = err.message;
+
+          if (errorMessage.includes('duplicate key value violates unique constraint "product_name"')) {
+              errorMessage = "Product name already exists";
+              return res.status(400).json({
+                  msg: "Error",
+                  err: errorMessage,
+              });
+          }
+
+          if (errorMessage.includes('null value in column "product_name" of relation "categories" violates not-null constraint')) {
+              errorMessage = "Product name cannot be null";
+              return res.status(400).json({
+                  msg: "Error",
+                  err: errorMessage,
+              });
+          }
       }
 
-      // Jika hanya img product yang terisi
-      if (file) {
-        const { result, error } = await cloudinaryUploader(
-          req,
-          "productimg",
-          uuid as string
-        );
-        console.log(result);
-        if (error) throw error;
-        if (!result) throw new Error("Upload gagal");
-        const imgProduct = await updateData(uuid, body, result.secure_url);
-        return res.status(201).json({
-          msg: "Success",
-          data: imgProduct.rows,
-        });
-      }
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (err: unknown) {
-    let errorMessage = "Internal Server Error";
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      if (
-        errorMessage.includes(
-          'duplicate key value violates unique constraint "product_name"'
-        )
-      ) {
-        errorMessage = "Product name already exists";
-        return res.status(400).json({
-          msg: "Error",
-          err: errorMessage,
-        });
-      }
-      if (
-        errorMessage.includes(
-          'null value in column "product_name" of relation "categories" violates not-null constraint'
-        )
-      ) {
-        errorMessage = "Product name cannot be null";
-        return res.status(400).json({
-          msg: "Error",
-          err: errorMessage,
-        });
-      }
       return res.status(500).json({
-        msg: "Error",
-        err: "Internal Server Error",
+          msg: "Error",
+          err: errorMessage,
       });
-    }
   }
-}; */
+};
+
