@@ -328,10 +328,10 @@ export const update = async (req: Request, res: Response) => {
 export const Delate = async (req: Request, res: Response) => {
   const { uuid } = req.params;
   try {
-      const product = await DelateData(uuid); 
+      const result = await DelateData(uuid); 
       return res.status(200).json({
           msg: "Success",
-          data: product.rows,
+          data: result,
       });
   } catch (err: unknown) {
     let errorMessage = "Internal Server Error";

@@ -210,8 +210,16 @@ export const delateImage = (id: string) => {
   return db.query(query , value)
 }
 
-export const DelateData = (uuid:string) => {
-  const query = `UPDATE products SET isdelete = true WHERE uuid = $1`
-  const value = [uuid];
-  return db.query(query , value)
-}
+export const DelateData = async (uuid: string): Promise<string> => {
+  const query = 'UPDATE products SET isdelete = true WHERE uuid = $1';
+
+  try {
+    await db.query(query, [uuid]);
+    return 'Product successfully deleted';
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      throw new Error(`Failed to delete product: ${err.message}`);
+    }
+    throw new Error('An unknown error occurred while deleting the product.');
+  }
+};
