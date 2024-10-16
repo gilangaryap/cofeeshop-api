@@ -33,7 +33,7 @@ export interface IProductQuery extends IProductPaginationQuery{
     minimumPrice: number;
     maximumPrice: number;
     sortBy?: string;
-    promo?: boolean;
+    favorite?: boolean;
 }
 
 export interface IProductPaginationQuery{

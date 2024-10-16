@@ -139,6 +139,7 @@ export const FetchAll = async ( req: Request<{}, {}, {}, IProductQuery>, res: Re
 
     return res.status(200).json(response);
   } catch (err) {
+    console.error("Error:", err);
     let errorMessage = "Internal Server Error";
     if (err instanceof Error) {
       errorMessage = err.message;

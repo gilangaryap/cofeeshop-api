@@ -36,91 +36,60 @@ export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?:
   return dbPool.query(query, values);
 };
 
-export const getAllData = async ( queryParams: IProductQuery): Promise<QueryResult<IDataProduct>> => {
-  let query = ` 
-      select products.uuid, products.product_name, products.product_price, products.product_description, p2.discount_price, c.categorie_name,
+export const getAllData = async (queryParams: IProductQuery): Promise<QueryResult<IDataProduct>> => {
+  let query = `
+      SELECT products.uuid, products.product_name, products.product_price, products.product_description, products.rating, p2.discount_price, c.categorie_name,
          (SELECT img_product FROM image_product WHERE product_id = products.id LIMIT 1) AS img_product
       FROM products
-          inner join categories c on products.category_id = c.id 
+          INNER JOIN categories c ON products.category_id = c.id 
           LEFT JOIN promo p2 ON products.id = p2.product_id
-      `;
-  let value = [];
+      WHERE products.isdelete = false
+  `;
+  let value: any[] = [];
+  
+  const { category, maximumPrice, minimumPrice, searchText, favorite, sortBy, page, limit} = queryParams;
 
-  let whereAdd = false;
-
-  const {
-    category,
-    maximumPrice,
-    minimumPrice,
-    searchText,
-    promo,
-    sortBy,
-    page,
-    limit,
-  } = queryParams;
-
-  if (promo) {
-    query += ` inner join promo on products.id = promo.product_id `;
-  }
-
-  if (minimumPrice && maximumPrice) {
-    if (maximumPrice > minimumPrice) {
-      query += whereAdd ? ` where ` : ` where `;
-      query += ` product_price between $${value?.length + 1} and $${
-        value?.length + 2
-      }`;
-
-      value.push(minimumPrice);
-      value.push(maximumPrice);
-      whereAdd = true;
-    }
+  if (favorite) {
+    query += `  AND rating > 4`;
   }
 
   if (searchText?.length > 0) {
-    query += whereAdd ? ` and ` : ` where `;
-    query += ` product_name ILIKE $${value?.length + 1} `;
+    query += ` AND product_name ILIKE $${value.length + 1}`;
     value.push(`%${searchText}%`);
-    whereAdd = true;
   }
 
-  if (category) {
-    query += whereAdd ? ` AND ` : ` WHERE `;
-    let categoryFilter = "";
-    if (category.toLowerCase() === "specialty coffees") {
-      categoryFilter = ` categorie_name = 'Specialty Coffees' `;
-    } else if (category.toLowerCase() === "gourmet snacks") {
-      categoryFilter = ` categorie_name = 'Gourmet Snacks'`;
-    } else if (category.toLowerCase() === "sweet indulgences") {
-      categoryFilter = ` categorie_name = 'Sweet Indulgences'`;
-    } else if (category.toLowerCase() === "unique beverages") {
-      categoryFilter = ` categorie_name = 'Unique Beverages'`;
-    } else {
-      throw new Error("Category invalid options");
-    }
+  if (minimumPrice !== undefined && maximumPrice !== undefined && maximumPrice > minimumPrice) {
+    query += ` AND product_price BETWEEN $${value.length + 1} AND $${value.length + 2}`;
+    value.push(minimumPrice, maximumPrice);
+  }
 
-    query += categoryFilter;
+  const categoryMap: { [key: string]: string } = {
+    "specialty coffees": "Specialty Coffees",
+    "gourmet snacks": "Gourmet Snacks",
+    "sweet indulgences": "Sweet Indulgences",
+    "unique beverages": "Unique Beverages",
+  };
 
-    whereAdd = true;
+  if (category && categoryMap[category.toLowerCase()]) {
+    query += ` AND categorie_name = '${categoryMap[category.toLowerCase()]}'`;
+  } else if (category) {
+    throw new Error("Invalid category option");
   }
 
   if (sortBy) {
-    let orderByClause = "";
-    if (sortBy.toLowerCase() === "cheaped") {
-      orderByClause = ` ORDER BY product_price ASC`;
-    } else if (sortBy.toLowerCase() === "priciest") {
-      orderByClause = ` ORDER BY product_price DESC`;
-    } else if (sortBy.toLowerCase() === "a-z") {
-      orderByClause = ` ORDER BY product_name ASC`;
-    } else if (sortBy.toLowerCase() === "z-a") {
-      orderByClause = ` ORDER BY product_name DESC`;
-    } else if (sortBy.toLowerCase() === "latest") {
-      orderByClause = ` ORDER BY created_at ASC`;
-    } else if (sortBy.toLowerCase() === "longest") {
-      orderByClause = ` ORDER BY created_at DESC`;
+    const orderByMap: { [key: string]: string } = {
+      "cheapest": "product_price ASC",
+      "priciest": "product_price DESC",
+      "a-z": "product_name ASC",
+      "z-a": "product_name DESC",
+      "latest": "created_at ASC",
+      "longest": "created_at DESC",
+    };
+    if (orderByMap[sortBy.toLowerCase()]) {
+      query += ` ORDER BY ${orderByMap[sortBy.toLowerCase()]}`;
     } else {
-      throw new Error("Sort invalid options");
+      throw new Error("Invalid sort option");
     }
-    query += orderByClause;
   } else {
     query += " ORDER BY products.category_id ASC";
   }
@@ -128,9 +97,11 @@ export const getAllData = async ( queryParams: IProductQuery): Promise<QueryResu
   if (page && limit) {
     const pageLimit = parseInt(limit);
     const offset = (parseInt(page) - 1) * pageLimit;
-    query += ` limit $${value.length + 1} offset $${value.length + 2}`;
+    query += ` LIMIT $${value.length + 1} OFFSET $${value.length + 2}`;
     value.push(pageLimit, offset);
   }
+
+  console.log(query)
   return db.query(query, value);
 };
 
@@ -138,8 +109,8 @@ export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataPro
   let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.categorie_name , p.created_at,  p.updated_at
         from products p 
         inner join categories c on p.category_id = c.id 
-        LEFT JOIN promo p2 ON p.id = p2.product_id
-        where p.uuid = $1 `;
+        LEFT JOIN promo p2 ON p.id = p2.product_id 
+        WHERE p.uuid = $1 AND p.isdelete = false`;
   return db.query(query, [uuid]);
 };
 
@@ -236,5 +207,11 @@ export const updateData = ( id: string, body: IProductBody): Promise<QueryResult
 export const delateImage = (id: string) => {
   const query = `DELETE FROM public.image_product WHERE product_id = $1`
   const value = [id];
+  return db.query(query , value)
+}
+
+export const DelateData = (uuid:string) => {
+  const query = `UPDATE products SET isdelete = false WHERE uuid = $1`
+  const value = [uuid];
   return db.query(query , value)
 }
