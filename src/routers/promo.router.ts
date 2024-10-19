@@ -1,7 +1,7 @@
-/* import { Router } from "express";
-import { create } from "../handlers/products/promo.handler";
-import { singleCloudUploader } from "../middleware/upload";
+import { Router } from "express";
+import { create, FetchAll } from "../handlers/products/promo.handler";
 
 export const promoRouter = Router()
 
-promoRouter.post("/add",singleCloudUploader("promo"), create) */
+promoRouter.post("/add/:id", create)
+promoRouter.get("/", FetchAll)

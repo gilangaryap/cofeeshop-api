@@ -8,6 +8,7 @@ import { transactionsRouter } from "./transactions.router";
 import { categoryRouter } from "./category.router";
 import { productRouter } from "./product.router";
 import { testimonialRouter } from "./testimonial.router";
+import { promoRouter } from "./promo.router";
 
 
 const mainRouter = Router();
@@ -20,7 +21,7 @@ const mainRouter = Router();
     mainRouter.use("/transaction", transactionsRouter);
     mainRouter.use("/category", categoryRouter);
     mainRouter.use("/product", productRouter);
-/*     mainRouter.use("/promo", promoRouter);
- */    mainRouter.use("/testimonial",testimonialRouter);
+    mainRouter.use("/promo", promoRouter);
+    mainRouter.use("/testimonial",testimonialRouter);
     
 export default mainRouter;
