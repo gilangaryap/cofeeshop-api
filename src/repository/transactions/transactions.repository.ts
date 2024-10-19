@@ -9,7 +9,6 @@ export const createData = (body: ITransactionBody,dbPool: Pool | PoolClient): Pr
       returning *`;
     const{ user_id , payments_id , shipping_id , status_id , subtotal , tax , total_discount , grand_total,} = body;
     const values = [ user_id , payments_id , shipping_id , status_id , subtotal , tax , total_discount , grand_total];
-    console.log(values, query);
     return dbPool.query(query, values);
 };
 
@@ -75,8 +74,6 @@ export const getAllData = (queryParams: ITransactionQuery,id:string) => {
     query += ` LIMIT $${values.length - 1} OFFSET $${values.length}`;
   }
 
-  console.log(query)
-
   return db.query(query, values);
 };
 
@@ -96,7 +93,6 @@ export const getDetailData = (uuid:string):Promise<QueryResult<IDataDetailHistor
   inner join shipping s on t.shipping_id = s.id 
   inner  join status_transactions st on t.status_id = st.id 
   WHERE t.id = $1`
-  console.log(uuid)
   return db.query(query,[uuid])
 }
 
@@ -119,6 +115,5 @@ export const getDetailDataProduct = (uuid:string):Promise<QueryResult<IDataProdu
     inner join transactions t on tp.transaction_id = t.id 
     inner  join shipping s on t.shipping_id = s.id 
     where t.id = $1`
-    console.log(uuid)
   return db.query(query,[uuid])
 }
