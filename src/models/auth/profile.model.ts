@@ -21,6 +21,10 @@ export interface IDataProfileResponse extends IBasicResponse1{
     data?: IProfileBody[]
 }
 
+export interface IDataUpdateProfileResponse extends IBasicResponse1{
+  data?: IDataProfile[]
+}
+
 export interface IDetailDataResponse extends IBasicResponse1{
     data?: IDetailData[]
 }

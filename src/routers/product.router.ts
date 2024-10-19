@@ -5,9 +5,9 @@ import { multiCloudUploader } from "../middleware/upload";
 export const productRouter = Router()
 
 
-productRouter.post("/add",multiCloudUploader("imagesField", 2), create);
+productRouter.post("/add",multiCloudUploader("imagesField", 3), create);
 productRouter.get("/",FetchAll);
-productRouter.patch("/setting/image/:uuid",multiCloudUploader("imagesField", 2),updateImage);
+productRouter.patch("/setting/image/:uuid",multiCloudUploader("imagesField", 3),updateImage);
 productRouter.patch("/setting/:uuid", update);
 productRouter.get("/detail/:uuid", FetchDetail)
 productRouter.delete("/delete/:uuid", Delate)

@@ -8,8 +8,7 @@ import db from "../../configs/pg";
 import sendMail from "../../helpers/nodemailer";
 import getLink from "../../helpers/getLink";
 import { IRegisterResponse, IUserProfileResponse, IUserRegisterBody, IUsersQuery,} from "../../models/auth/user.model";
-import { createData, getAllData, getTotalData, updateData,
-} from "../../repository/auth/user.repository";
+import { createData, getAllData, getTotalData, updateData} from "../../repository/auth/user.repository";
 import { createDataProfile } from "../../repository/auth/profile.repository";
 import { GetByEmail } from "../../repository/auth/auth.repository";
 import { IProfileBody } from "../../models/auth/profile.model";
