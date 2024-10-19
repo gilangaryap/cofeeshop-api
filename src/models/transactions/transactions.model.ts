@@ -1,4 +1,4 @@
-import { IBasicResponse } from "../response";
+import { IBasicResponse, IBasicResponse1 } from "../response";
 
 export interface ITransactionBody {
   user_id: number;
@@ -17,11 +17,41 @@ export interface IDataTransaction extends ITransactionBody {
   updated_at?: string;
 }
 
+export interface IDataDetailHistory {
+  full_name: string;
+  phone_number: string;
+  address: string;
+  payment_method: string;
+  shipping_method: string;
+  status: string;
+  grand_total: number;
+}
+
+export interface IDataProductDetailHistory {
+  id: string;
+  img_product: string;
+  product_name: string;
+  product_price: number;
+  discount_price: number;
+  product_size: string;
+  option: string;
+  shipping_method: string;
+}
+
 export interface ITransactionQuery {
   page: string;
   limit: string;
   [key: string]: any;
   status: string;
+}
+
+interface Detail {
+  info: IDataDetailHistory;
+  product: IDataProductDetailHistory[];
+}
+
+export interface IHistoryDetailResponse extends IBasicResponse1 {
+  data?: Detail[];
 }
 
 export interface ITransactionResponse extends IBasicResponse {
@@ -44,6 +74,7 @@ export interface ITransaction_product {
   transaction_id: number;
   product_id: number;
   size_id: number;
+  ice_hot?: string;
 }
 
 export interface ITransactionQuery {
@@ -53,11 +84,13 @@ export interface ITransactionQuery {
 }
 
 interface ITransaction_Product {
-  transaction_id : number ;
-  product_id : number ;
-  size_id : number ;
+  transaction_id: number;
+  product_id: number;
+  size_id: number;
 }
 
-export interface ITransactionWithDetailsBody extends ITransaction_product ,  ITransactionBody {
+export interface ITransactionWithDetailsBody
+  extends ITransaction_product,
+    ITransactionBody {
   products: ITransaction_Product[];
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { ITransactionQuery, ITransactionResponse, ITransactionWithDetailsBody } from "../../models/transactions/transactions.model";
+import { IHistoryDetailResponse, ITransactionQuery, ITransactionResponse, ITransactionWithDetailsBody } from "../../models/transactions/transactions.model";
 import db from "../../configs/pg";
-import { createData, createDataProduct, getAllData, getTotalTransaction } from "../../repository/transactions/transactions.repository";
+import { createData, createDataProduct, getAllData, getDetailData, getDetailDataProduct, getTotalTransaction } from "../../repository/transactions/transactions.repository";
 import getLink from "../../helpers/getLink";
 
 export const create = async (req: Request<{}, {}, ITransactionWithDetailsBody>,res: Response<ITransactionResponse>) => {
@@ -45,8 +45,7 @@ export const create = async (req: Request<{}, {}, ITransactionWithDetailsBody>,r
     }
 };
 
-export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransactionQuery>,res: Response
-) => {
+export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransactionQuery>,res: Response) => {
   try {
     const { id } = req.params;
 
@@ -67,7 +66,6 @@ export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransaction
     const limit = parseInt(req.query.limit as string || "4");
 
     const totalPage = Math.ceil(totalData / limit);
-
     return res.status(200).json({
       msg: "success",
       data: result.rows,
@@ -79,8 +77,8 @@ export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransaction
         nextLink: page != totalPage ? getLink(req, "next") : null,
       },
     });
+    
   } catch (err) {
-    // Menangani kesalahan internal server
     console.error("Internal Server Error:", err);
     return res.status(500).json({
       msg: "Error",
@@ -88,3 +86,41 @@ export const FetchAll = async (req: Request<{ id: string }, {}, {}, ITransaction
     });
   }
 };
+
+export const FetchDetail = async (req: Request, res: Response<IHistoryDetailResponse>) => {
+  const { uuid } = req.params;
+  try {
+
+    const infoHistory = await getDetailData(uuid); 
+    const productHistory = await getDetailDataProduct(uuid); 
+
+    if (!infoHistory.rows.length || !productHistory.rows.length) {
+      return res.status(404).json({
+        code: 404,
+        msg: 'No data found',
+        error: { message: 'The requested details do not exist.' }
+      });
+    }
+
+    res.status(200).json({
+      code: 200,
+      msg: 'Success',
+      data: [{
+        info: infoHistory.rows[0],  
+        product: productHistory.rows 
+      }]
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      code: 500,
+      msg: 'Error',
+      error: {
+        message: 'An error occurred while fetching details.',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }
+    });
+  }
+};
+
+
