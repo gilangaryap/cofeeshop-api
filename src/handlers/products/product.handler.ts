@@ -53,8 +53,12 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
     return res.status(201).json({
       code: 201,
       msg: "Product created successfully",
-      data: [product,...imgProducts],
+      data: [{
+        product,
+        images: imgProducts,
+      }],
     });
+    
   } catch (err) {
     console.error("Error in createNewProduct:", err);
 

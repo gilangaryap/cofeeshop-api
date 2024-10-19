@@ -38,6 +38,10 @@ interface FetchDetail {
   images: IImgProduct;
 }
 
+interface CreateData {
+  product: IDataProduct;
+  images: IProductImage[];
+}
 
 export interface IProductQuery extends IProductPaginationQuery {
   searchText: string;
@@ -63,7 +67,7 @@ export interface IProductWithImageProductResponse extends IBasicResponse {
 }
 
 export interface ICreateDataResponse extends IBasicResponse1 {
-  data?: (IDataProduct | IProductImage)[];
+  data?: CreateData[];
 }
 
 export interface IFetchDetailResponse extends IBasicResponse1 {

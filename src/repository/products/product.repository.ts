@@ -6,20 +6,8 @@ export const createData = (body: IProductBody): Promise<QueryResult<IDataProduct
   const query = `insert into products ( product_name , product_price , product_description , category_id , product_stock)
     values ($1, $2, $3, $4, $5)
     returning id ,  product_name , product_price , product_description , category_id , product_stock , created_at `;
-  const {
-    product_name,
-    product_price,
-    product_description,
-    category_id,
-    product_stock,
-  } = body;
-  const values = [
-    product_name,
-    product_price,
-    product_description,
-    category_id,
-    product_stock,
-  ];
+  const { product_name, product_price, product_description, category_id, product_stock,} = body;
+  const values = [ product_name, product_price, product_description, category_id, product_stock,];
   console.log("ini: ", values);
   return db.query(query, values);
 };
