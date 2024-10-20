@@ -10,7 +10,6 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
   const client = await db.connect();
   try {
     await client.query("BEGIN");
-    console.log("Request body:", req.body);
 
     const productResult = await createData(req.body);
     const product = productResult.rows[0];
@@ -290,7 +289,6 @@ export const update = async (req: Request, res: Response<IUpdateDataResponse>) =
             },
         });
     }    
-      console.log("body :" , req.body)
       return res.status(200).json({
         code:200,
         msg: "Success",

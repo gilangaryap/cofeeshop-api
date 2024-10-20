@@ -8,7 +8,6 @@ export const createData = (body: IProductBody): Promise<QueryResult<IDataProduct
     returning id ,  product_name , product_price , product_description , category_id , product_stock , created_at `;
   const { product_name, product_price, product_description, category_id, product_stock,} = body;
   const values = [ product_name, product_price, product_description, category_id, product_stock,];
-  console.log("ini: ", values);
   return db.query(query, values);
 };
 
@@ -20,7 +19,6 @@ export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?:
   query += ` ($${values.length + 1}, $${values.length + 2})`;
   values.push(imgUrlValue, id);
   query += ` returning * `;
-  console.log(query, values);
   return dbPool.query(query, values);
 };
 
@@ -88,8 +86,6 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
     query += ` LIMIT $${value.length + 1} OFFSET $${value.length + 2}`;
     value.push(pageLimit, offset);
   }
-
-  console.log(query)
   return db.query(query, value);
 };
 
@@ -187,9 +183,8 @@ export const updateData = async (id: string, body: IProductBody): Promise<QueryR
     `;
     values.push(id);
 
-    console.log(query); // Log the query for debugging
 
-    return await db.query(query, values); // Ensure you await the database query
+    return await db.query(query, values); 
   } else {
     throw new Error('No fields to update');
   }
