@@ -3,26 +3,26 @@ import db from "../../configs/pg";
 import { ICategoriesBody, IDataCategories } from "../../models/products/category.model";
 
 export const createData = (body: ICategoriesBody ): Promise<QueryResult<IDataCategories>> => {
-    const query = `insert into categories (categorie_name)
+    const query = `insert into categories (category_name)
     values ($1)
-    returning categorie_name`;
-    const { categorie_name } = body;
-    const values = [categorie_name];
+    returning category_name`;
+    const { category_name } = body;
+    const values = [category_name];
     return db.query(query,values);
 }
 
 export const getAllData = (): Promise<QueryResult<IDataCategories>> => {
-    const query = `select id , categorie_name from categories`
+    const query = `select id , category_name from categories`
     return db.query(query)
 }
 
 export const updateData = (id: string, body: ICategoriesBody): Promise<QueryResult<IDataCategories>> => {
     const query = `update categories 
-                   set categorie_name = $2
+                   set category_name = $2
                    where id = $1 
-                   RETURNING categorie_name`;
-    const { categorie_name } = body;
-    const values = [id,categorie_name];
+                   RETURNING category_name`;
+    const { category_name } = body;
+    const values = [id,category_name];
     return db.query(query, values);
 };
 

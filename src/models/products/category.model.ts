@@ -1,7 +1,7 @@
 import { IBasicResponse } from "../../models/response";
 
 export interface ICategoriesBody {
-    categorie_name: string,
+    category_name: string,
 }
 
 export interface IDataCategories extends ICategoriesBody {
