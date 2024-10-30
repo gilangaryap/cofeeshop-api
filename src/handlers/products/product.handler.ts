@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { IFetchDetailResponse, ICreateDataResponse, IProductBody, IProductQuery, IProductResponse, IUpdateImageResponse, IUpdateDataResponse,} from "../../models/products/product.model";
+import { IFetchDetailResponse, ICreateDataResponse, IProductBody, IProductQuery, IProductResponse, IUpdateImageResponse, IUpdateDataResponse, IDetailSingleImageData,} from "../../models/products/product.model";
 import db from "../../configs/pg";
-import { createData, createDataImage, getAllData, getDetailData, getImgData, getTotalData, updateData, DelateData, deleteImage } from '../../repository/products/product.repository';
+import { createData, createDataImage, getAllData, getDetailData, getImgData, getTotalData, updateData, DelateData, deleteImage, getDetailSingleImageData } from '../../repository/products/product.repository';
 import { cloudinaryArrayUploader} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
@@ -349,4 +349,25 @@ export const Delate = async (req: Request, res: Response) => {
   });
   }
 }
+
+export const FetchSingleImageDetail = async (req: Request, res: Response<IDetailSingleImageData>) => {
+  const { uuid } = req.params;
+  try {
+      const result = await getDetailSingleImageData(uuid); 
+      return res.status(200).json({
+          code:200,
+          msg: "Success",
+          data: result.rows,
+      });
+  } catch (err: unknown) {
+    let errorMessage = "Internal Server Error";
+    return res.status(500).json({
+      code:500,
+      msg: "Error",
+      error: {
+        message: errorMessage
+      },
+  });
+  }
+};
 

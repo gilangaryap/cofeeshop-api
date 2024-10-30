@@ -74,6 +74,10 @@ export interface IFetchDetailResponse extends IBasicResponse1 {
   data?: FetchDetail[];
 }
 
+export interface IDetailSingleImageData extends IBasicResponse1 {
+  data?: IDataProduct[];
+}
+
 export interface IUpdateImageResponse extends IBasicResponse1 {
   data?: IProductImage[];
 }

@@ -68,7 +68,7 @@ export const register = async ( req: Request<{}, {}, IUserRegisterBody>, res: Re
         },
       });
     }
-
+    
     const defaultProfile: IProfileBody = {
       full_name: "full name",
       phone_number: "phone number",
@@ -142,7 +142,6 @@ export const login = async ( req: Request<{}, {}, IUserLoginBody>, res: Response
       throw new Error("The email you entered is incorrect");
 
     const { user_pass: hash, id, role } = result.rows[0];
-    console.log('Fetched role from DB:', role);
 
     const isPwdValid = await bcrypt.compare(user_pass, hash);
     if (!isPwdValid) 

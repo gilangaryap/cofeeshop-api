@@ -208,3 +208,18 @@ export const DelateData = async (uuid: string): Promise<string> => {
     throw new Error('An unknown error occurred while deleting the product.');
   }
 };
+
+export const getDetailSingleImageData = (uuid:string): Promise<QueryResult<IDataProduct>> => {
+  let query = `select (SELECT img_product
+             FROM image_product
+             WHERE product_id = p.id
+             LIMIT 1) AS img_product,
+             p.product_name ,
+             p.product_price ,
+             p2.discount_price 
+    from products p 
+    left join promo p2 on p.id = p2.product_id 
+    where p.uuid = $1
+    `;
+  return db.query(query, [uuid]);
+};

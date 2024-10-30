@@ -89,8 +89,6 @@ interface ITransaction_Product {
   size_id: number;
 }
 
-export interface ITransactionWithDetailsBody
-  extends ITransaction_product,
-    ITransactionBody {
+export interface ITransactionWithDetailsBody extends ITransaction_product , ITransactionBody {
   products: ITransaction_Product[];
 }

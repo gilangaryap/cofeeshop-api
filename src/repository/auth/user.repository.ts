@@ -4,8 +4,8 @@ import { IDataUser, IUserBody, IUserProfileData, IUsersQuery } from "../../model
 
 export const createData = (hashedPassword: string,email: string,dbPool: Pool | PoolClient): Promise<QueryResult<IDataUser>> => {
   const query = `
-    INSERT INTO users ( user_email, user_pass , role)
-    VALUES ($1, $2 , 'user' )
+    INSERT INTO users ( user_email, user_pass)
+    VALUES ($1, $2  )
     RETURNING user_email , id `;
   const values = [email, hashedPassword];
   return dbPool.query(query, values);
@@ -57,7 +57,6 @@ export const updateData = (id: string, body: IUserBody, hashedPassword?: string)
 
   return db.query(query, values);
 };
-
 
 export const checkIfUserExists = async (id: string) => {
     const query = `SELECT COUNT(*) AS count FROM users WHERE users_id = $1`;
