@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { createData, getAllData, getTotalTestimonialData } from "../../repository/products/testimonial.repository";
+import { createData, getAllData, getTotalTestimonialData } from "../../repository/auth/testimonial.repository";
 import getLink from "../../helpers/getLink";
 import { IUsersQuery } from "../../models/auth/user.model";
-import { ITestimonialResponse } from "../../models/products/testimonial.model";
+import { ITestimonialResponse } from "../../models/auth/testimonial.model";
 
 export const create = async (req: Request, res: Response) => {
   const { id } = req.params;

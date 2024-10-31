@@ -1,6 +1,6 @@
 import { QueryResult } from "pg";
 import { IUsersQuery } from "../../models/auth/user.model";
-import { IDataTestimonial, IDataTestimonialBody } from "../../models/products/testimonial.model";
+import { IDataTestimonial, IDataTestimonialBody } from "../../models/auth/testimonial.model";
 import db from "../../configs/pg";
 
 
