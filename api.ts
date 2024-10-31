@@ -1,5 +1,7 @@
 import * as dotenv from "dotenv";
-dotenv.config();
+const env = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+dotenv.config({ path: env });
+
 import express from "express";
 import router from "./src/routers";
 import { CorsOptions } from "cors";
