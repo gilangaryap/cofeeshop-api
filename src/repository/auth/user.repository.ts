@@ -52,7 +52,7 @@ export const updateData = (id: string, body: IUserBody, hashedPassword?: string)
     return Promise.reject(new Error("No fields to update"));
   }
 
-  const query = `UPDATE users SET ${queryParts.join(", ")}, updated_at = now() WHERE id = $${values.length + 1} RETURNING user_email, updated_at;`;
+  const query = `UPDATE users SET ${queryParts.join(", ")} , updated_at = now() WHERE id = $${values.length + 1} RETURNING user_email, updated_at;`;
   values.push(id);
 
   return db.query(query, values);
