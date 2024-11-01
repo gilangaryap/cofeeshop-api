@@ -1,21 +1,12 @@
 import { Request, Response } from "express";
 import { IPromoBody } from "../../models/products/promo.model";
-import { createData, getAllData } from "../../repository/products/promo.repository";
+import { createData, DelateData, getAllData } from "../../repository/products/promo.repository";
 
 
 export const create = async (req: Request<{ id: string }, {}, IPromoBody>, res: Response) => {
     const { id } = req.params;
     try {
-        console.log('Inserting data:', {
-            id: id,
-            discount_price: req.body.discount_price,
-            promo_name: req.body.promo_name,
-            promo_description: req.body.promo_description,
-            product_id: req.body.product_id
-        });
-        
         const result = await createData(req.body, id); 
-
         return res.status(201).json({
             msg: "success",
             data: result.rows,
@@ -24,8 +15,11 @@ export const create = async (req: Request<{ id: string }, {}, IPromoBody>, res: 
         console.error('Error details:', err);
         if (err instanceof Error) {
             return res.status(500).json({
+                code: 500,
                 msg: "Error",
-                error: err.message,
+                error:{
+                    massage: err.message,
+                } 
             });
         } else {
             return res.status(500).json({
@@ -58,3 +52,22 @@ export const FetchAll = async (req:Request,res:Response) => {
         }
     }
 };
+
+export const Delate = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const result = await DelateData(id); 
+        return res.status(200).json({
+            msg: "Success",
+            data: result,
+        });
+    } catch (err: unknown) {
+      console.error(err);
+      let errorMessage = "Internal Server Error";
+      return res.status(500).json({
+        code: 500,
+        msg: "Error",
+        err: errorMessage,
+    });
+    }
+  }

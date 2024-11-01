@@ -25,7 +25,6 @@ export const singleCloudUploader = (fieldName: string) => {
   const singleCloud = cloudUploader.single(fieldName);
   return (req: Request, res: Response, next: NextFunction) => {
     singleCloud(req, res, (err: unknown) => {
-
       const errorMessageMap: { [key: string]: string } = {
         LIMIT_PART_COUNT: "The number of uploaded files exceeds the limit.",
         LIMIT_FILE_SIZE: "The uploaded file size exceeds the limit.",
@@ -35,16 +34,17 @@ export const singleCloudUploader = (fieldName: string) => {
         LIMIT_FIELD_COUNT: "The number of uploaded fields exceeds the limit.",
         LIMIT_UNEXPECTED_FILE: "The uploaded file format is invalid.",
       };
+
       if (err instanceof multer.MulterError) {
         const message =
           errorMessageMap[err.code] ||
           "An error occurred while uploading the file.";
         return res.status(400).send({
-          status:400,
-          msg:"MulterError",
-          error:{
-            massage:message,
-          }
+          status: 400,
+          msg: "MulterError",
+          error: {
+            message: message,
+          },
         });
       }
 
@@ -67,19 +67,21 @@ export const singleCloudUploader = (fieldName: string) => {
           },
         });
       }
+
       const files = req.files as Express.Multer.File[];
       const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
 
-      if ( !files || !files.every((file) => allowedMimeTypes.includes(file.mimetype))) {
-        return res
-          .status(400)
-          .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+     /*  if (!files || !files.every((file) => allowedMimeTypes.includes(file.mimetype))) {
+        return res.status(400).send({
+          message: "Only JPG, PNG, or JPEG files are allowed.",
+        });
       }
-
+ */
       next();
     });
   };
 };
+
 
 export const multiCloudUploader = ( fieldName: string, maxCount: number): RequestHandler => {
   const multiCloud = cloudUploader.array(fieldName, maxCount);

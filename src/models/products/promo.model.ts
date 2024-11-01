@@ -9,3 +9,4 @@ export interface IPromoBody {
 export interface IDataPromo extends IPromoBody {
     id: string,
 }
+
