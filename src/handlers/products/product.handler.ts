@@ -119,6 +119,8 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
 
 export const FetchAll = async ( req: Request<{}, {}, {}, IProductQuery>, res: Response<IProductResponse>) => {
   try {
+
+    console.log("Incoming category:", req.query.category);
     const result = await getAllData(req.query);
     if (!result) {
       return res.status(404).json({
@@ -151,17 +153,20 @@ export const FetchAll = async ( req: Request<{}, {}, {}, IProductQuery>, res: Re
     console.error("Error:", err);
     let errorMessage = "Internal Server Error";
     if (err instanceof Error) {
-        errorMessage = err.message;
-        if (errorMessage.includes("Sort invalid options")) {
-            errorMessage = "Sort invalid options. Allowed options are: cheapest, priciest, a-z, z-a, latest, longest.";
-        } else if (errorMessage.includes("Category invalid options")) {
-            errorMessage = "Category invalid options. Allowed options are: drink, snack, heavy meal.";
-        }
+      errorMessage = err.message;
+      if (errorMessage.includes("Sort invalid options")) {
+        errorMessage = "Sort invalid options. Allowed options are: cheapest, priciest, a-z, z-a, latest, longest.";
+      } 
+      // Uncomment this when category validation is implemented
+      /* else if (errorMessage.includes("Category invalid options")) {
+        errorMessage = "Category invalid options. Allowed options are: drink, snack, heavy meal.";
+      } */
     }
+
     return res.status(500).json({
-        code: 500,
-        msg: "Error",
-        error: { message: errorMessage },
+      code: 500,
+      msg: "Error",
+      error: { message: errorMessage },
     });
   }
 };
@@ -171,10 +176,10 @@ export const FetchDetail = async (req: Request, res: Response<IFetchDetailRespon
 
   try {
     const { uuid } = req.params;
+    console.log(uuid)
 
     await client.query("BEGIN");
 
-    // Get product details
     const product = await getDetailData(uuid);
     if (!product.rows[0]) {
       await client.query("ROLLBACK");
@@ -187,7 +192,6 @@ export const FetchDetail = async (req: Request, res: Response<IFetchDetailRespon
       });
     }
 
-    // Get product ID
     const productId = product.rows[0].id;
     if (!productId) {
       await client.query("ROLLBACK");
@@ -198,7 +202,6 @@ export const FetchDetail = async (req: Request, res: Response<IFetchDetailRespon
       });
     }
 
-    // Get product image
     const imgProduct = await getImgData(client, productId);
     
 
@@ -348,8 +351,10 @@ export const Delate = async (req: Request, res: Response) => {
           data: result,
       });
   } catch (err: unknown) {
+    console.error(err);
     let errorMessage = "Internal Server Error";
     return res.status(500).json({
+      code: 500,
       msg: "Error",
       err: errorMessage,
   });

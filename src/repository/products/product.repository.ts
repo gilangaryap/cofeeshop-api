@@ -49,17 +49,16 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
     value.push(minimumPrice, maximumPrice);
   }
 
-  const categoryMap: { [key: string]: string } = {
-    "specialty coffees": "Specialty Coffees",
-    "gourmet snacks": "Gourmet Snacks",
-    "sweet indulgences": "Sweet Indulgences",
-    "unique beverages": "Unique Beverages",
+  const categoryMap: { [key: number]: string } = {
+    1: "Coffee",
+    2: "Non Coffee",
+    3: "Foods",
+    4: "Add-On",
   };
 
-  if (category && categoryMap[category.toLowerCase()]) {
-    query += ` AND category_name = '${categoryMap[category.toLowerCase()]}'`;
-  } else if (category) {
-    throw new Error("Invalid category option");
+  const categorys = Number(category);
+  if (typeof categorys === 'number' && categoryMap[categorys]) {
+    query += ` AND category_name ='${categoryMap[categorys]}'`; 
   }
 
   if (sortBy) {
@@ -90,11 +89,11 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
 };
 
 export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataProduct>> => {
-  let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.category_name , p.created_at,  p.updated_at
+  let query = `select p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.category_name , p.created_at,  p.updated_at
         from products p 
         inner join categories c on p.category_id = c.id 
         LEFT JOIN promos p2 ON p.id = p2.product_id 
-        WHERE p.uuid = $1 AND p.isdelete = false`;
+        WHERE p.id = $1 AND p.isdelete = false`;
   return db.query(query, [uuid]);
 };
 
@@ -178,8 +177,8 @@ export const updateData = async (id: string, body: IProductBody): Promise<QueryR
     const query = `
       UPDATE products 
       SET ${queryParts.join(', ')}, updated_at = NOW() 
-      WHERE uuid = $${values.length + 1} 
-      RETURNING uuid, product_name, product_price, product_description, category_id, product_stock, updated_at;
+      WHERE id = $${values.length + 1} 
+      RETURNING id , product_name, product_price, product_description, category_id, product_stock, updated_at;
     `;
     values.push(id);
 
@@ -197,7 +196,7 @@ export const deleteImage = (id: string) => {
 }
 
 export const DelateData = async (uuid: string): Promise<string> => {
-  const query = 'UPDATE products SET isdelete = true WHERE uuid = $1';
+  const query = 'UPDATE products SET isdelete = true WHERE id = $1';
   try {
     await db.query(query, [uuid]);
     return 'Product successfully deleted';

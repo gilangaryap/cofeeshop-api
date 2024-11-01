@@ -45,7 +45,7 @@ interface CreateData {
 
 export interface IProductQuery extends IProductPaginationQuery {
   searchText: string;
-  category: string;
+  category: number;
   minimumPrice: number;
   maximumPrice: number;
   sortBy?: string;
