@@ -1,7 +1,6 @@
-import multer, {Field,Options,StorageEngine,memoryStorage,} from "multer";
+import multer, { Field, Options, StorageEngine, memoryStorage } from "multer";
 import path from "path";
 import { NextFunction, Request, RequestHandler, Response } from "express";
-
 
 const multerMemory = memoryStorage();
 
@@ -26,102 +25,118 @@ export const singleCloudUploader = (fieldName: string) => {
   const singleCloud = cloudUploader.single(fieldName);
   return (req: Request, res: Response, next: NextFunction) => {
     singleCloud(req, res, (err: unknown) => {
+
+      const errorMessageMap: { [key: string]: string } = {
+        LIMIT_PART_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FILE_SIZE: "The uploaded file size exceeds the limit.",
+        LIMIT_FILE_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FIELD_KEY: "The uploaded field key is invalid.",
+        LIMIT_FIELD_VALUE: "The uploaded field value is invalid.",
+        LIMIT_FIELD_COUNT: "The number of uploaded fields exceeds the limit.",
+        LIMIT_UNEXPECTED_FILE: "The uploaded file format is invalid.",
+      };
       if (err instanceof multer.MulterError) {
-        switch (err.code) {
-          case "LIMIT_PART_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded files exceeds the limit.",
-              });
-          case "LIMIT_FILE_SIZE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded file size exceeds the limit." });
-          case "LIMIT_FILE_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded files exceeds the limit.",
-              });
-          case "LIMIT_FIELD_KEY":
-            return res
-              .status(400)
-              .send({ message: "The uploaded field key is invalid." });
-          case "LIMIT_FIELD_VALUE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded field value is invalid." });
-          case "LIMIT_FIELD_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded fields exceeds the limit.",
-              });
-          case "LIMIT_UNEXPECTED_FILE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded file format is invalid." });
-          default:
-            return res
-              .status(500)
-              .send({ message: "An error occurred while uploading the file." });
-        }
-      } else if (err) {
-        const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
-        if (!req.file || !allowedMimeTypes.includes(req.file.mimetype)) {
-          return res
-            .status(400)
-            .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
-        }
-        return res.status(500).json({ error: "Internal server error" });
+        const message =
+          errorMessageMap[err.code] ||
+          "An error occurred while uploading the file.";
+        return res.status(400).send({
+          status:400,
+          msg:"MulterError",
+          error:{
+            massage:message,
+          }
+        });
       }
+
+      if (err) {
+        if (err instanceof Error && err.message === "Incorrect File") {
+          return res.status(400).send({
+            status: 400,
+            msg: "MulterError",
+            error: {
+              message: "Only JPG, PNG, or JPEG files are allowed.",
+            },
+          });
+        }
+        console.error("Unknown error:", err);
+        return res.status(500).json({
+          status: 500,
+          msg: "MulterError",
+          error: {
+            message: "An error occurred while uploading the file.",
+          },
+        });
+      }
+      const files = req.files as Express.Multer.File[];
+      const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+      if ( !files || !files.every((file) => allowedMimeTypes.includes(file.mimetype))) {
+        return res
+          .status(400)
+          .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+      }
+
       next();
     });
   };
 };
 
-export const multiCloudUploader = (  fieldName: string,  maxCount: number): RequestHandler => {
+export const multiCloudUploader = ( fieldName: string, maxCount: number): RequestHandler => {
   const multiCloud = cloudUploader.array(fieldName, maxCount);
   return (req: Request, res: Response, next: NextFunction) => {
-    multiCloud(req, res, (err: unknown) =>  {
-      // Check if error is a multer error
+    multiCloud(req, res, (err: unknown) => {
+
+      const errorMessageMap: { [key: string]: string } = {
+        LIMIT_PART_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FILE_SIZE: "The uploaded file size exceeds the limit.",
+        LIMIT_FILE_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FIELD_KEY: "The uploaded field key is invalid.",
+        LIMIT_FIELD_VALUE: "The uploaded field value is invalid.",
+        LIMIT_FIELD_COUNT: "The number of uploaded fields exceeds the limit.",
+        LIMIT_UNEXPECTED_FILE: "The uploaded file format is invalid.",
+      };
       if (err instanceof multer.MulterError) {
-        switch (err.code) {
-          case "LIMIT_PART_COUNT":
-            return res.status(400).send({
-              message: "The number of uploaded files exceeds the limit.",
-            });
-          case "LIMIT_FILE_SIZE":
-            return res.status(400).send({ message: "The uploaded file size exceeds the limit." });
-          case "LIMIT_FILE_COUNT":
-            return res.status(400).send({
-              message: "The number of uploaded files exceeds the limit.",
-            });
-          case "LIMIT_FIELD_KEY":
-            return res.status(400).send({ message: "The uploaded field key is invalid." });
-          case "LIMIT_FIELD_VALUE":
-            return res.status(400).send({ message: "The uploaded field value is invalid." });
-          case "LIMIT_FIELD_COUNT":
-            return res.status(400).send({
-              message: "The number of uploaded fields exceeds the limit.",
-            });
-          case "LIMIT_UNEXPECTED_FILE":
-            return res.status(400).send({ message: "The uploaded file format is invalid." });
-          default:
-            return res.status(500).send({ message: "An error occurred while uploading the file." });
+        const message =
+          errorMessageMap[err.code] ||
+          "An error occurred while uploading the file.";
+        return res.status(400).send({
+          status:400,
+          msg:"MulterError",
+          error:{
+            massage:message,
+          }
+        });
+      }
+
+      if (err) {
+        if (err instanceof Error && err.message === "Incorrect File") {
+          return res.status(400).send({
+            status: 400,
+            msg: "MulterError",
+            error: {
+              message: "Only JPG, PNG, or JPEG files are allowed.",
+            },
+          });
         }
-      } else if (err) {
-        // Handle other errors
-        return res.status(500).json({ error: "Internal server error" });
+        console.error("Unknown error:", err);
+        return res.status(500).json({
+          status: 500,
+          msg: "MulterError",
+          error: {
+            message: "An error occurred while uploading the file.",
+          },
+        });
       }
       const files = req.files as Express.Multer.File[];
       const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
-      if (!files || !files.every(file => allowedMimeTypes.includes(file.mimetype))) {
-        return res.status(400).send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+
+      if ( !files || !files.every((file) => allowedMimeTypes.includes(file.mimetype))) {
+        return res
+          .status(400)
+          .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
       }
 
-      next(); // Proceed to the next middleware
+      next();
     });
   };
 };
@@ -130,63 +145,58 @@ export const multiFieldCloudUploader = (fieldName: Field[]) => {
   const multiFieldCloud = cloudUploader.fields(fieldName);
   return (req: Request, res: Response, next: NextFunction) => {
     multiFieldCloud(req, res, (err: unknown) => {
+      
+     const errorMessageMap: { [key: string]: string } = {
+        LIMIT_PART_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FILE_SIZE: "The uploaded file size exceeds the limit.",
+        LIMIT_FILE_COUNT: "The number of uploaded files exceeds the limit.",
+        LIMIT_FIELD_KEY: "The uploaded field key is invalid.",
+        LIMIT_FIELD_VALUE: "The uploaded field value is invalid.",
+        LIMIT_FIELD_COUNT: "The number of uploaded fields exceeds the limit.",
+        LIMIT_UNEXPECTED_FILE: "The uploaded file format is invalid.",
+      };
       if (err instanceof multer.MulterError) {
-        switch (err.code) {
-          case "LIMIT_PART_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded files exceeds the limit.",
-              });
-          case "LIMIT_FILE_SIZE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded file size exceeds the limit." });
-          case "LIMIT_FILE_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded files exceeds the limit.",
-              });
-          case "LIMIT_FIELD_KEY":
-            return res
-              .status(400)
-              .send({ message: "The uploaded field key is invalid." });
-          case "LIMIT_FIELD_VALUE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded field value is invalid." });
-          case "LIMIT_FIELD_COUNT":
-            return res
-              .status(400)
-              .send({
-                message: "The number of uploaded fields exceeds the limit.",
-              });
-          case "LIMIT_UNEXPECTED_FILE":
-            return res
-              .status(400)
-              .send({ message: "The uploaded file format is invalid." });
-          default:
-            return res
-              .status(500)
-              .send({ message: "An error occurred while uploading the file." });
-        }
-      } else if (err) {
-        if (
-          req.file?.mimetype !== "image/jpeg" &&
-          req.file?.mimetype !== "image/png" &&
-          req.file?.mimetype !== "image/jpg"
-        ) {
-          return res
-            .status(400)
-            .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
-        }
-        return res.status(500).json({ error: "Internal server error" });
-      } else {
-        next();
+        const message =
+          errorMessageMap[err.code] ||
+          "An error occurred while uploading the file.";
+        return res.status(400).send({
+          status:400,
+          msg:"MulterError",
+          error:{
+            massage:message,
+          }
+        });
       }
+
+      if (err) {
+        if (err instanceof Error && err.message === "Incorrect File") {
+          return res.status(400).send({
+            status: 400,
+            msg: "MulterError",
+            error: {
+              message: "Only JPG, PNG, or JPEG files are allowed.",
+            },
+          });
+        }
+        console.error("Unknown error:", err);
+        return res.status(500).json({
+          status: 500,
+          msg: "MulterError",
+          error: {
+            message: "An error occurred while uploading the file.",
+          },
+        });
+      }
+      const files = req.files as Express.Multer.File[];
+      const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+      if ( !files || !files.every((file) => allowedMimeTypes.includes(file.mimetype))) {
+        return res
+          .status(400)
+          .send({ message: "Only JPG, PNG, or JPEG files are allowed." });
+      }
+
+      next();
     });
   };
 };
-
-

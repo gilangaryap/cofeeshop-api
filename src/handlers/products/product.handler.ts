@@ -6,19 +6,28 @@ import { cloudinaryArrayUploader} from "../../helpers/cloudinary";
 import getLink from "../../helpers/getLink";
 
 export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<ICreateDataResponse>) => {
-  
   const client = await db.connect();
+
   try {
     await client.query("BEGIN");
+    if (!req.body) {
+        return res.status(400).json({
+          code:400,
+          msg: "Error",
+          error:{
+            message:"Body is missing"
+          }
+         });
+    }
 
     const productResult = await createData(req.body);
     const product = productResult.rows[0];
-
     if (!product || !product.id) {
       throw new Error("Failed to create product");
     }
 
     const productId = product.id;
+    const productName = product.product_name
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
@@ -29,7 +38,7 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
       });
     }
 
-    const { results, errors } = await cloudinaryArrayUploader( req , `product-${productId}`);
+    const { results, errors } = await cloudinaryArrayUploader( req , `product-${productName}`);
 
     if (errors && errors.length > 0) {
       throw new Error(
@@ -41,9 +50,7 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
 
     const secureUrls = results?.map((result) => result.secure_url) || [];
 
-    const imgPromises = secureUrls.map((url) =>
-      createDataImage(client, productId, url)
-    );
+    const imgPromises = secureUrls.map((url) => createDataImage(client, productId, url));
     const imgResults = await Promise.all(imgPromises);
     const imgProducts = imgResults.map((res) => res.rows[0]);
 
@@ -60,7 +67,6 @@ export const create = async ( req: Request<{}, {}, IProductBody>, res: Response<
     
   } catch (err) {
     console.error("Error in createNewProduct:", err);
-
     try {
       await client.query("ROLLBACK");
     } catch (rollbackErr) {

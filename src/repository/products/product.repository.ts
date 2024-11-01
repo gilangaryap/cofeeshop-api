@@ -24,11 +24,11 @@ export const createDataImage = ( dbPool: Pool | PoolClient, id: string, imgUrl?:
 
 export const getAllData = async (queryParams: IProductQuery): Promise<QueryResult<IDataProduct>> => {
   let query = `
-      SELECT products.uuid, products.product_name, products.product_price, products.product_description, products.rating, p2.discount_price, c.categorie_name,
+      SELECT products.id, products.product_name, products.product_price, products.product_description, products.rating, p2.discount_price, c.category_name,
          (SELECT img_product FROM image_product WHERE product_id = products.id LIMIT 1) AS img_product
       FROM products
           INNER JOIN categories c ON products.category_id = c.id 
-          LEFT JOIN promo p2 ON products.id = p2.product_id
+          LEFT JOIN promos p2 ON products.id = p2.product_id
       WHERE products.isdelete = false
   `;
   let value: any[] = [];
@@ -57,7 +57,7 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
   };
 
   if (category && categoryMap[category.toLowerCase()]) {
-    query += ` AND categorie_name = '${categoryMap[category.toLowerCase()]}'`;
+    query += ` AND category_name = '${categoryMap[category.toLowerCase()]}'`;
   } else if (category) {
     throw new Error("Invalid category option");
   }
@@ -90,10 +90,10 @@ export const getAllData = async (queryParams: IProductQuery): Promise<QueryResul
 };
 
 export const getDetailData = async ( uuid: string): Promise<QueryResult<IDataProduct>> => {
-  let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.categorie_name , p.created_at,  p.updated_at
+  let query = `select p.uuid , p.id , p.product_name ,  p.product_price ,  p2.discount_price ,  p.product_description,  p.product_stock, c.category_name , p.created_at,  p.updated_at
         from products p 
         inner join categories c on p.category_id = c.id 
-        LEFT JOIN promo p2 ON p.id = p2.product_id 
+        LEFT JOIN promos p2 ON p.id = p2.product_id 
         WHERE p.uuid = $1 AND p.isdelete = false`;
   return db.query(query, [uuid]);
 };
@@ -105,7 +105,7 @@ export const getDetailProductImg = async (uuid: string): Promise<QueryResult<IDa
 INNER JOIN 
     categories c ON p.category_id = c.id
 LEFT JOIN 
-    promo p2 ON p.id = p2.product_id
+    promos p2 ON p.id = p2.product_id
 WHERE 
     p.uuid = $1 `;
   return db.query(query, [uuid]);
@@ -218,7 +218,7 @@ export const getDetailSingleImageData = (uuid:string): Promise<QueryResult<IData
              p.product_price ,
              p2.discount_price 
     from products p 
-    left join promo p2 on p.id = p2.product_id 
+    left join promos p2 on p.id = p2.product_id 
     where p.uuid = $1
     `;
   return db.query(query, [uuid]);
