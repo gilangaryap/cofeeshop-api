@@ -5,5 +5,5 @@ import { authorization } from "../middleware/authorization.middleware";
 
 export const profileRouter = Router();
 
-profileRouter.patch("/setting/:id", singleCloudUploader("profile") , Update )
+profileRouter.patch("/setting/:id", singleCloudUploader("profile") ,authorization(['admin', 'user']), Update )
 profileRouter.get("/:id", FetchDetail)

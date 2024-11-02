@@ -9,7 +9,7 @@ export const jwtOptions: SignOptions = {
   issuer: process.env.JWT_ISSUER,
 };
 
-export const authorization =(roles: string) =>(req: Request<AppParams>, res: Response<IAuthResponse>, next: NextFunction)=> {
+export const authorization =(roles: string[]) =>(req: Request<AppParams>, res: Response<IAuthResponse>, next: NextFunction)=> {
     const bearerToken = req.header("Authorization");
     if (!bearerToken) {
       return res.status(401).json({
